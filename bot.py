@@ -8,6 +8,7 @@ import feedparser
 import httpx
 from bs4 import BeautifulSoup
 from google import genai
+from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -21,14 +22,13 @@ bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Подключение к локальной базе данных
+# Локальная база данных
 db = sqlite3.connect("sniper.db", check_same_thread=False)
 cursor = db.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS seen_ads (ad_id TEXT PRIMARY KEY)")
 cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, lang TEXT DEFAULT 'ru')")
 db.commit()
 
-# Тексты интерфейса
 TRANSLATIONS = {
     "ru": {
         "welcome": "👋 Привет! Я **Finn Sniper** 🎯\nЯ мониторю новые лоты на Finn.no и мгновенно присылаю выгодные предложения.\n\nВыберите язык интерфейса:",
@@ -46,7 +46,7 @@ TRANSLATIONS = {
         "welcome": "👋 Hello! I am **Finn Sniper** 🎯\nI track fresh deals on Finn.no in real time.\n\nSelect your language:",
         "lang_set": "✅ Language set to English!",
         "open_btn": "🔗 Open on Finn.no",
-        "quick_msg": "Hei! Jeg er veldig interessert og kan hente den i dag. Betaler gjerne med Vipps/kontant. Mvh!"
+        "quick_msg": "Hei! Jeg er очень interessert og kan hente den i dag. Betaler gjerne med Vipps/kontant. Mvh!"
     },
     "ua": {
         "welcome": "👋 Привіт! Я **Finn Sniper** 🎯\nЯ моніторю свіжі знахідки на Finn.no у реальному часі.\n\nОберіть мову інтерфейсу:",
@@ -97,12 +97,11 @@ async def analyze_with_gemini(title: str, description: str, lang: str):
 
     Tasks:
     1. Is this listing complete junk / broken / unrepairable? (Answer YES or NO).
-    2. Write a 1-sentence evaluation and highlight key pros/cons in target language ({lang}).
-    3. Estimate typical second-hand market value in NOK (e.g. '~1 500 kr' or '0 kr').
+    2. Write a 1-sentence evaluation in target language ({lang}).
+    3. Estimate typical second-hand market value in NOK.
 
     Format output exactly as:
     JUNK: <YES or NO>
-    PRICE_EST: <estimated value in NOK>
     VERDICT: <your 1-sentence summary>
     """
     try:
@@ -116,7 +115,6 @@ async def analyze_with_gemini(title: str, description: str, lang: str):
         return None
 
 async def poll_finn():
-    # RSS-лента бесплатных товаров (Gis bort)
     rss_url = "https://www.finn.no/bap/forsale/search.rss?trade_type=2"
     
     while True:
@@ -134,7 +132,6 @@ async def poll_finn():
 
                 clean_desc = BeautifulSoup(entry.summary, "html.parser").get_text() if "summary" in entry else ""
                 
-                # Получаем всех пользователей для отправки
                 cursor.execute("SELECT user_id, lang FROM users")
                 all_users = cursor.fetchall()
                 
@@ -143,7 +140,7 @@ async def poll_finn():
                     ai_result = await analyze_with_gemini(entry.title, clean_desc, lang)
                     
                     if ai_result and "JUNK: YES" in ai_result:
-                        continue # Пропускаем явный хлам
+                        continue
                     
                     verdict_match = re.search(r"VERDICT:\s*(.*)", ai_result or "")
                     verdict = verdict_match.group(1) if verdict_match else "Лот прошел базовую проверку."
@@ -165,11 +162,25 @@ async def poll_finn():
                         logging.error(f"Send error: {err}")
 
         except Exception as e:
-            logging.error(f"Polling loop error: {e}")
+            logging.error(f"Polling error: {e}")
 
-        await asyncio.sleep(20) # Опрос каждые 20 секунд
+        await asyncio.sleep(20)
+
+# Веб-сервер для бесплатного тарифа Render
+async def run_web_server():
+    async def handle_ping(request):
+        return web.Response(text="Finn Sniper is online!")
+
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
 
 async def main():
+    await run_web_server()
     asyncio.create_task(poll_finn())
     await dp.start_polling(bot)
 
