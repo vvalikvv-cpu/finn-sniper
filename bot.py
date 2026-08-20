@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
+BOT_USERNAME = "finn_sniper_bot"
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
@@ -29,7 +30,7 @@ cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, l
 cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
 conn.commit()
 
-# Исправленные RSS-ленты Finn.no
+# RSS-ленты Finn.no
 FEEDS = {
     "Gis bort (0 kr)": "https://www.finn.no/bap/forsale/search.rss?price_to=0&trade_type=2&sort=PUBLISHED_DESC",
     "Tech & Apple": "https://www.finn.no/bap/forsale/search.rss?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC",
@@ -150,7 +151,6 @@ async def set_language(callback: types.CallbackQuery):
     await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
     await callback.answer()
 
-# Команда для проверки доставки сообщений и канала
 @dp.message(Command("test"))
 async def handle_test(message: types.Message):
     test_title = "Makita DDF484 Bormaskin / Skrutrekker (Test)"
@@ -158,7 +158,6 @@ async def handle_test(message: types.Message):
     test_ai = "🇳🇴 Meget god profesjonell drill til topp pris.\n🇷🇺 Отличный профессиональный шуруповерт."
     test_link = "https://www.finn.no"
 
-    # Отправка в личку
     await message.answer(
         f"🧪 <b>[ТЕСТОВОЕ ОПОВЕЩЕНИЕ В ЧАТ]</b>\n"
         f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
@@ -167,7 +166,6 @@ async def handle_test(message: types.Message):
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se på Finn.no ↗", url=test_link)]])
     )
 
-    # Отправка в канал
     if CHANNEL_ID:
         try:
             await bot.send_message(
@@ -176,16 +174,16 @@ async def handle_test(message: types.Message):
                     f"🧪 <b>[ТЕСТ В КАНАЛ]</b>\n"
                     f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
                     f"✨ <i>{test_ai}</i>\n\n"
-                    f"⚡ <a href='https://t.me/{bot.username}'>Включить радар в боте</a>"
+                    f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
                 ),
                 parse_mode="HTML",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]])
             )
             await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> сообщение успешно отправлено!", parse_mode="HTML")
         except Exception as e:
-            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}\n(Проверьте, добавлен ли бот в администраторы канала).")
+            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}\n(Убедитесь, что бот добавлен администратором в канал).")
     else:
-        await message.answer("⚠️ Переменная CHANNEL_ID не задана в Render.")
+        await message.answer("⚠️ Переменная CHANNEL_ID не задана.")
 
 async def send_invoice_logic(chat_id, user_id):
     cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
@@ -234,7 +232,6 @@ async def monitor_finn():
         try:
             for cat_name, rss_url in FEEDS.items():
                 feed = await asyncio.to_thread(feedparser.parse, rss_url, agent=USER_AGENT)
-                logging.info(f"Проверка {cat_name}: получено {len(feed.entries)} записей")
                 
                 for entry in reversed(feed.entries[:3]):
                     item_id = entry.link
@@ -252,7 +249,7 @@ async def monitor_finn():
                                 f"🏷️ <b>[{cat_name}]</b>\n"
                                 f"📌 <b>{title}</b>\n\n"
                                 f"✨ <i>{ai_verdict}</i>\n\n"
-                                f"⚡ <a href='https://t.me/{bot.username}'>Включить радар в боте</a>"
+                                f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
                             )
                             channel_kb = InlineKeyboardMarkup(inline_keyboard=[
                                 [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=item_id)]
