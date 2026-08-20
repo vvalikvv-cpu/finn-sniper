@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-CHANNEL_ID = os.getenv("CHANNEL_ID")  # Например: @finn_sniper_kupp
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
@@ -27,33 +27,38 @@ cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, l
 cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
 conn.commit()
 
-# Шаблоны сообщений
+# Категории мониторинга Finn.no (RSS-фиды)
+FEEDS = {
+    "Gis bort (0 kr)": "https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2&sort=PUBLISHED_DESC",
+    "Tech & Apple": "https://www.finn.no/bap/forsale/search.html?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC",
+    "Verktøy & Sveising": "https://www.finn.no/bap/forsale/search.html?category=0.67&sub_category=1.67.3911&sort=PUBLISHED_DESC"
+}
+
 TEXTS = {
     "ru": {
-        "welcome": "🎯 <b>Добро пожаловать в Finn Sniper!</b>\n\nЯ отслеживаю бесплатные лоты и выгодные находки на Finn.no в реальном времени.",
+        "welcome": "🎯 <b>Добро пожаловать в Finn Sniper!</b>\n\nРадар активен. Отслеживаю бесплатные лоты (Gis bort), технику и электроинструмент на Finn.no в реальном времени.",
         "ai_title": "✨ <b>Оценка Gemini AI:</b>",
         "btn_finn": "Открыть на Finn.no ↗",
-        "btn_msg": "💬 Сообщение владельцу",
-        "msg_template": "Hei! Jeg er veldig interessert og kan hente denne i dag. Passer det for deg?"
     },
     "no": {
-        "welcome": "🎯 <b>Velkommen til Finn Sniper!</b>\n\nJeg overvåker gratiskupp og gode tilbud på Finn.no i sanntid.",
+        "welcome": "🎯 <b>Velkommen til Finn Sniper!</b>\n\nRadaren er aktiv. Overvåker gratiskupp, tech og proffverktøy på Finn.no i sanntid.",
         "ai_title": "✨ <b>Gemini AI Vurdering:</b>",
         "btn_finn": "Se annonse på Finn.no ↗",
-        "btn_msg": "💬 Melding til selger",
-        "msg_template": "Hei! Jeg er veldig interessert og kan hente i dag hvis det passer for deg."
     }
 }
 
-async def analyze_with_gemini(title: str, desc: str) -> str:
+async def analyze_with_gemini(title: str, desc: str, category_name: str) -> str:
     if not gemini_client:
         return "Ingen AI-vurdering tilgjengelig."
     try:
         prompt = (
-            f"Vurder denne gratis-annonsen fra Finn.no kort på norsk og russisk (maks 2 setninger per språk):\n"
+            f"Du er en ekspert på gjenbruk og kupp i Norge.\n"
+            f"Kategori: {category_name}\n"
             f"Tittel: {title}\n"
-            f"Beskrivelse: {desc}\n"
-            f"Er dette attraktivt / har verdi? Noen feil oppgitt?"
+            f"Beskrivelse: {desc}\n\n"
+            f"Gi en superkort vurdering på 2 linjer:\n"
+            f"1) 🇳🇴 Norsk: Er dette et godt kjøp/kupp? Hva er anslått verdi/etterspørsel?\n"
+            f"2) 🇷🇺 Русский: Выгодно ли это забрать/купить и каков потенциал?"
         )
         response = await asyncio.to_thread(
             gemini_client.models.generate_content,
@@ -89,58 +94,60 @@ async def set_language(callback: types.CallbackQuery):
     await callback.answer()
 
 async def monitor_finn():
-    rss_url = "https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2&sort=PUBLISHED_DESC&sub_category=1.93.3905"
     while True:
         try:
-            feed = await asyncio.to_thread(feedparser.parse, rss_url)
-            for entry in reversed(feed.entries[:5]):
-                item_id = entry.link
-                cursor.execute("SELECT 1 FROM seen_items WHERE item_id = ?", (item_id,))
-                if cursor.fetchone() is None:
-                    title = html.unescape(entry.title)
-                    summary = html.unescape(entry.get("summary", ""))
-                    ai_verdict = await analyze_with_gemini(title, summary)
-                    
-                    cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
-                    conn.commit()
+            for cat_name, rss_url in FEEDS.items():
+                feed = await asyncio.to_thread(feedparser.parse, rss_url)
+                for entry in reversed(feed.entries[:3]):
+                    item_id = entry.link
+                    cursor.execute("SELECT 1 FROM seen_items WHERE item_id = ?", (item_id,))
+                    if cursor.fetchone() is None:
+                        title = html.unescape(entry.title)
+                        summary = html.unescape(entry.get("summary", ""))
+                        ai_verdict = await analyze_with_gemini(title, summary, cat_name)
+                        
+                        cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
+                        conn.commit()
 
-                    # 1. Отправка в публичный канал (если настроен)
-                    if CHANNEL_ID:
-                        channel_text = (
-                            f"🎁 <b>{title}</b>\n\n"
-                            f"📍 <b>Finn.no (Gis bort)</b>\n"
-                            f"✨ <i>{ai_verdict}</i>\n\n"
-                            f"⚡ <a href='https://t.me/{bot.username}?start=vip'>Получать моментальные пуши в боте</a>"
-                        )
-                        channel_kb = InlineKeyboardMarkup(inline_keyboard=[
-                            [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=item_id)]
-                        ])
-                        try:
-                            await bot.send_message(chat_id=CHANNEL_ID, text=channel_text, parse_mode="HTML", reply_markup=channel_kb)
-                        except Exception as ce:
-                            logging.error(f"Channel post error: {ce}")
+                        # 1. Публикация в Telegram-канал
+                        if CHANNEL_ID:
+                            channel_text = (
+                                f"🏷️ <b>[{cat_name}]</b>\n"
+                                f"📌 <b>{title}</b>\n\n"
+                                f"{ai_verdict}\n\n"
+                                f"⚡ <a href='https://t.me/{bot.username}?start=vip'>Получать моментальные пуши в боте</a>"
+                            )
+                            channel_kb = InlineKeyboardMarkup(inline_keyboard=[
+                                [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=item_id)]
+                            ])
+                            try:
+                                await bot.send_message(chat_id=CHANNEL_ID, text=channel_text, parse_mode="HTML", reply_markup=channel_kb)
+                            except Exception as ce:
+                                logging.error(f"Channel post error: {ce}")
 
-                    # 2. Отправка подписчикам бота в личку
-                    cursor.execute("SELECT user_id, lang FROM users")
-                    users = cursor.fetchall()
-                    for uid, lang in users:
-                        t = TEXTS.get(lang, TEXTS["no"])
-                        user_text = (
-                            f"🎁 <b>{title}</b>\n\n"
-                            f"{t['ai_title']}\n{ai_verdict}\n"
-                        )
-                        user_kb = InlineKeyboardMarkup(inline_keyboard=[
-                            [InlineKeyboardButton(text=t["btn_finn"], url=item_id)]
-                        ])
-                        try:
-                            await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
-                        except Exception as ue:
-                            logging.error(f"User send error to {uid}: {ue}")
+                        # 2. Отправка пользователям бота
+                        cursor.execute("SELECT user_id, lang FROM users")
+                        users = cursor.fetchall()
+                        for uid, lang in users:
+                            t = TEXTS.get(lang, TEXTS["no"])
+                            user_text = (
+                                f"🏷️ <b>[{cat_name}]</b>\n"
+                                f"📌 <b>{title}</b>\n\n"
+                                f"{t['ai_title']}\n{ai_verdict}\n"
+                            )
+                            user_kb = InlineKeyboardMarkup(inline_keyboard=[
+                                [InlineKeyboardButton(text=t["btn_finn"], url=item_id)]
+                            ])
+                            try:
+                                await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
+                            except Exception as ue:
+                                logging.error(f"User send error to {uid}: {ue}")
 
+                await asyncio.sleep(5)  # Небольшая пауза между категориями
         except Exception as e:
             logging.error(f"Monitor loop error: {e}")
 
-        await asyncio.sleep(25)
+        await asyncio.sleep(20)
 
 async def handle_ping(request):
     return web.Response(text="Finn Sniper is online!")
