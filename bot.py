@@ -20,6 +20,8 @@ bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
 gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+
 # База данных
 conn = sqlite3.connect("bot_data.db", check_same_thread=False)
 cursor = conn.cursor()
@@ -27,11 +29,11 @@ cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, l
 cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
 conn.commit()
 
-# RSS-ленты категорий Finn.no
+# Исправленные RSS-ленты Finn.no
 FEEDS = {
-    "Gis bort (0 kr)": "https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2&sort=PUBLISHED_DESC",
-    "Tech & Apple": "https://www.finn.no/bap/forsale/search.html?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC",
-    "Verktøy": "https://www.finn.no/bap/forsale/search.html?category=0.67&sub_category=1.67.3911&sort=PUBLISHED_DESC"
+    "Gis bort (0 kr)": "https://www.finn.no/bap/forsale/search.rss?price_to=0&trade_type=2&sort=PUBLISHED_DESC",
+    "Tech & Apple": "https://www.finn.no/bap/forsale/search.rss?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC",
+    "Verktøy": "https://www.finn.no/bap/forsale/search.rss?category=0.67&sub_category=1.67.3911&sort=PUBLISHED_DESC"
 }
 
 TEXTS = {
@@ -148,6 +150,43 @@ async def set_language(callback: types.CallbackQuery):
     await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
     await callback.answer()
 
+# Команда для проверки доставки сообщений и канала
+@dp.message(Command("test"))
+async def handle_test(message: types.Message):
+    test_title = "Makita DDF484 Bormaskin / Skrutrekker (Test)"
+    test_cat = "Verktøy"
+    test_ai = "🇳🇴 Meget god profesjonell drill til topp pris.\n🇷🇺 Отличный профессиональный шуруповерт."
+    test_link = "https://www.finn.no"
+
+    # Отправка в личку
+    await message.answer(
+        f"🧪 <b>[ТЕСТОВОЕ ОПОВЕЩЕНИЕ В ЧАТ]</b>\n"
+        f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
+        f"✨ <b>Gemini AI:</b>\n{test_ai}",
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se på Finn.no ↗", url=test_link)]])
+    )
+
+    # Отправка в канал
+    if CHANNEL_ID:
+        try:
+            await bot.send_message(
+                chat_id=CHANNEL_ID,
+                text=(
+                    f"🧪 <b>[ТЕСТ В КАНАЛ]</b>\n"
+                    f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
+                    f"✨ <i>{test_ai}</i>\n\n"
+                    f"⚡ <a href='https://t.me/{bot.username}'>Включить радар в боте</a>"
+                ),
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]])
+            )
+            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> сообщение успешно отправлено!", parse_mode="HTML")
+        except Exception as e:
+            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}\n(Проверьте, добавлен ли бот в администраторы канала).")
+    else:
+        await message.answer("⚠️ Переменная CHANNEL_ID не задана в Render.")
+
 async def send_invoice_logic(chat_id, user_id):
     cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -194,7 +233,9 @@ async def monitor_finn():
     while True:
         try:
             for cat_name, rss_url in FEEDS.items():
-                feed = await asyncio.to_thread(feedparser.parse, rss_url)
+                feed = await asyncio.to_thread(feedparser.parse, rss_url, agent=USER_AGENT)
+                logging.info(f"Проверка {cat_name}: получено {len(feed.entries)} записей")
+                
                 for entry in reversed(feed.entries[:3]):
                     item_id = entry.link
                     cursor.execute("SELECT 1 FROM seen_items WHERE item_id = ?", (item_id,))
@@ -238,7 +279,7 @@ async def monitor_finn():
                             except Exception as ue:
                                 logging.error(f"User send error to {uid}: {ue}")
 
-                await asyncio.sleep(5)
+                await asyncio.sleep(4)
         except Exception as e:
             logging.error(f"Monitor loop error: {e}")
 
@@ -249,7 +290,6 @@ async def handle_ping(request):
 
 async def start_web_server():
     app = web.Application()
-    # add_get автоматически обрабатывает и GET, и HEAD запросы
     app.router.add_get("/", handle_ping)
     runner = web.AppRunner(app)
     await runner.setup()
