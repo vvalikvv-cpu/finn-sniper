@@ -43,45 +43,79 @@ TEXTS = {
         "btn_vip": "⭐ Оформить VIP (250 Stars)",
         "btn_lang": "🌐 Сменить язык",
         "btn_finn": "Открыть на Finn.no ↗",
+        "btn_templates": "💬 Текст продавцу",
         "invoice_title": "VIP Sniper (30 дней)",
         "invoice_desc": "Моментальные персональные уведомления о находках!",
-        "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>"
+        "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>",
+        "templates_header": "📋 <b>Быстрые шаблоны на норвежском (нажмите, чтобы скопировать):</b>\n\n"
+                            "🚗 <b>Быстрый самовывоз сегодня:</b>\n"
+                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
+                            "💰 <b>Торг / предложение цены:</b>\n"
+                            "<code>Hei! Er varen fortsatt tilgjengelig? Kan hente raskt mot en smidig handel. Mvh</code>\n\n"
+                            "📦 <b>Отправка почтой / Fiks ferdig:</b>\n"
+                            "<code>Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh</code>"
     },
     "no": {
         "menu": "🎯 <b>Finn Sniper Kontrollpanel</b>\n\nRadaren er aktiv 24/7. Nye kupp sendes umiddelbart.",
         "btn_vip": "⭐ Aktiver VIP (250 Stars)",
         "btn_lang": "🌐 Endre språk",
         "btn_finn": "Se annonse på Finn.no ↗",
+        "btn_templates": "💬 Melding til selger",
         "invoice_title": "VIP Sniper (30 dager)",
         "invoice_desc": "Motta lynraske varsler om de beste kuppene!",
-        "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>"
+        "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>",
+        "templates_header": "📋 <b>Hurtigmaler (trykk for å kopiere):</b>\n\n"
+                            "🚗 <b>Hente i dag:</b>\n"
+                            "<code>Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh</code>\n\n"
+                            "💰 <b>Rask handel:</b>\n"
+                            "<code>Hei! Er varen fortsatt tilgjengelig? Kan hente raskt. Mvh</code>\n\n"
+                            "📦 <b>Fiks ferdig:</b>\n"
+                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
     },
     "en": {
         "menu": "🎯 <b>Finn Sniper Control Panel</b>\n\nRadar active 24/7. New deals sent instantly.",
         "btn_vip": "⭐ Get VIP (250 Stars)",
         "btn_lang": "🌐 Change Language",
         "btn_finn": "Open on Finn.no ↗",
+        "btn_templates": "💬 Message Templates",
         "invoice_title": "VIP Sniper (30 days)",
         "invoice_desc": "Fastest deal alerts directly to your PM!",
-        "success_pay": "🎉 <b>VIP activated for 30 days!</b>"
+        "success_pay": "🎉 <b>VIP activated for 30 days!</b>",
+        "templates_header": "📋 <b>Quick Norwegian templates (tap to copy):</b>\n\n"
+                            "🚗 <b>Pickup today:</b>\n"
+                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
+                            "📦 <b>Shipping:</b>\n"
+                            "<code>Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh</code>"
     },
     "ua": {
         "menu": "🎯 <b>Панель управління Finn Sniper</b>\n\nРадар активний 24/7. Знахідки надходять миттєво.",
         "btn_vip": "⭐ Оформити VIP (250 Stars)",
         "btn_lang": "🌐 Змінити мову",
         "btn_finn": "Відкрити на Finn.no ↗",
+        "btn_templates": "💬 Текст для продавця",
         "invoice_title": "VIP Sniper (30 днів)",
         "invoice_desc": "Миттєві сповіщення про найкращі пропозиції!",
-        "success_pay": "🎉 <b>VIP активовано на 30 днів!</b>"
+        "success_pay": "🎉 <b>VIP активовано на 30 днів!</b>",
+        "templates_header": "📋 <b>Швидкі шаблони норвезькою (натисніть, щоб скопіювати):</b>\n\n"
+                            "🚗 <b>Самовивіз сьогодні:</b>\n"
+                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
+                            "📦 <b>Відправка поштою:</b>\n"
+                            "<code>Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh</code>"
     },
     "pl": {
         "menu": "🎯 <b>Panel sterowania Finn Sniper</b>\n\nRadar jest aktywny 24/7.",
         "btn_vip": "⭐ Aktywuj VIP (250 Stars)",
         "btn_lang": "🌐 Zmień język",
         "btn_finn": "Zobacz na Finn.no ↗",
+        "btn_templates": "💬 Szablon wiadomości",
         "invoice_title": "VIP Sniper (30 dni)",
         "invoice_desc": "Błyskawiczne powiadomienia o okazjach!",
-        "success_pay": "🎉 <b>VIP aktywowany na 30 dni!</b>"
+        "success_pay": "🎉 <b>VIP aktywowany na 30 dni!</b>",
+        "templates_header": "📋 <b>Gotowe szablony po norwesku (kliknij, aby skopiować):</b>\n\n"
+                            "🚗 <b>Odbiór dzisiaj:</b>\n"
+                            "<code>Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh</code>\n\n"
+                            "📦 <b>Wysyłka:</b>\n"
+                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
     }
 }
 
@@ -151,23 +185,46 @@ async def set_language(callback: types.CallbackQuery):
     await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
     await callback.answer()
 
+# Кнопка вызова быстрых шаблонов сообщений
+@dp.callback_query(F.data == "show_templates")
+async def handle_show_templates(callback: types.CallbackQuery):
+    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (callback.from_user.id,))
+    row = cursor.fetchone()
+    lang = row[0] if row else "no"
+    t = TEXTS.get(lang, TEXTS["no"])
+    await callback.message.answer(t["templates_header"], parse_mode="HTML")
+    await callback.answer()
+
 @dp.message(Command("test"))
 async def handle_test(message: types.Message):
+    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (message.from_user.id,))
+    row = cursor.fetchone()
+    lang = row[0] if row else "no"
+    t = TEXTS.get(lang, TEXTS["no"])
+
     test_title = "Makita DDF484 Bormaskin / Skrutrekker (Test)"
     test_cat = "Verktøy"
     test_ai = "🇳🇴 Meget god profesjonell drill til topp pris.\n🇷🇺 Отличный профессиональный шуруповерт."
     test_link = "https://www.finn.no"
+
+    item_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=t["btn_finn"], url=test_link)],
+        [InlineKeyboardButton(text=t["btn_templates"], callback_data="show_templates")]
+    ])
 
     await message.answer(
         f"🧪 <b>[ТЕСТОВОЕ ОПОВЕЩЕНИЕ В ЧАТ]</b>\n"
         f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
         f"✨ <b>Gemini AI:</b>\n{test_ai}",
         parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se på Finn.no ↗", url=test_link)]])
+        reply_markup=item_kb
     )
 
     if CHANNEL_ID:
         try:
+            channel_kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]
+            ])
             await bot.send_message(
                 chat_id=CHANNEL_ID,
                 text=(
@@ -177,13 +234,11 @@ async def handle_test(message: types.Message):
                     f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
                 ),
                 parse_mode="HTML",
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]])
+                reply_markup=channel_kb
             )
-            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> сообщение успешно отправлено!", parse_mode="HTML")
+            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> тестовое сообщение отправлено!", parse_mode="HTML")
         except Exception as e:
-            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}\n(Убедитесь, что бот добавлен администратором в канал).")
-    else:
-        await message.answer("⚠️ Переменная CHANNEL_ID не задана.")
+            await message.answer(f"❌ Ошибка в канале {CHANNEL_ID}: {e}")
 
 async def send_invoice_logic(chat_id, user_id):
     cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
@@ -244,6 +299,7 @@ async def monitor_finn():
                         cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
                         conn.commit()
 
+                        # Публикация в канал
                         if CHANNEL_ID:
                             channel_text = (
                                 f"🏷️ <b>[{cat_name}]</b>\n"
@@ -259,6 +315,7 @@ async def monitor_finn():
                             except Exception as ce:
                                 logging.error(f"Channel send error: {ce}")
 
+                        # Отправка пользователям с кнопкой шаблонов
                         cursor.execute("SELECT user_id, lang FROM users")
                         users = cursor.fetchall()
                         for uid, lang in users:
@@ -269,7 +326,8 @@ async def monitor_finn():
                                 f"✨ <b>Gemini AI:</b>\n{ai_verdict}\n"
                             )
                             user_kb = InlineKeyboardMarkup(inline_keyboard=[
-                                [InlineKeyboardButton(text=t["btn_finn"], url=item_id)]
+                                [InlineKeyboardButton(text=t["btn_finn"], url=item_id)],
+                                [InlineKeyboardButton(text=t["btn_templates"], callback_data="show_templates")]
                             ])
                             try:
                                 await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
