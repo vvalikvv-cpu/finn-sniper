@@ -16,50 +16,54 @@
             background-color: var(--tg-theme-button-color, #3b82f6);
             color: var(--tg-theme-button-text-color, #ffffff);
         }
+        .cat-active {
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.15) !important;
+        }
     </style>
 </head>
 <body class="p-4 select-none pb-20">
-    <!-- Шапка с переключателем языков -->
+    <!-- Шапка с флагами языков -->
     <header class="flex justify-between items-center mb-5">
         <div>
             <h1 class="text-2xl font-bold tracking-tight">Finn Sniper 🎯</h1>
             <p id="sub-title" class="text-xs text-slate-400">Lynrask kupp-radar for Norge</p>
         </div>
-        <div class="flex items-center gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700">
-            <button onclick="setLang('no')" class="lang-btn px-2 py-1 rounded-lg text-xs" data-l="no">🇳🇴</button>
-            <button onclick="setLang('en')" class="lang-btn px-2 py-1 rounded-lg text-xs" data-l="en">🇬🇧</button>
-            <button onclick="setLang('ru')" class="lang-btn px-2 py-1 rounded-lg text-xs" data-l="ru">🇷🇺</button>
-            <button onclick="setLang('ua')" class="lang-btn px-2 py-1 rounded-lg text-xs" data-l="ua">🇺🇦</button>
-            <button onclick="setLang('pl')" class="lang-btn px-2 py-1 rounded-lg text-xs" data-l="pl">🇵🇱</button>
+        <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
+            <button onclick="setLang('no')" id="btn-lang-no" class="px-2 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">🇳🇴</button>
+            <button onclick="setLang('en')" id="btn-lang-en" class="px-2 py-1 rounded-lg text-xs text-slate-400">🇬🇧</button>
+            <button onclick="setLang('ru')" id="btn-lang-ru" class="px-2 py-1 rounded-lg text-xs text-slate-400">🇷🇺</button>
+            <button onclick="setLang('ua')" id="btn-lang-ua" class="px-2 py-1 rounded-lg text-xs text-slate-400">🇺🇦</button>
+            <button onclick="setLang('pl')" id="btn-lang-pl" class="px-2 py-1 rounded-lg text-xs text-slate-400">🇵🇱</button>
         </div>
     </header>
 
-    <!-- Категории -->
+    <!-- Выбор категорий -->
     <section class="mb-5">
         <h2 id="cat-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Velg kategori</h2>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="selectCategory('gis_bort')" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-blue-500 rounded-xl text-left">
+            <button onclick="toggleCategory(this)" class="cat-btn cat-active flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🎁</span>
                 <div>
                     <div id="cat-1-t" class="text-sm font-semibold">Gis bort</div>
-                    <div id="cat-1-d" class="text-[10px] text-slate-400">Gratis ting</div>
+                    <div id="cat-1-d" class="text-[10px] text-slate-400">Gratis ting (0 kr)</div>
                 </div>
             </button>
-            <button onclick="selectCategory('tech')" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left">
+            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">💻</span>
                 <div>
                     <div id="cat-2-t" class="text-sm font-semibold">Tech & Apple</div>
                     <div id="cat-2-d" class="text-[10px] text-slate-400">iPhone / Mac</div>
                 </div>
             </button>
-            <button onclick="selectCategory('tools')" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left">
+            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🛠️</span>
                 <div>
                     <div id="cat-3-t" class="text-sm font-semibold">Verktøy</div>
                     <div id="cat-3-d" class="text-[10px] text-slate-400">Proff-utstyr</div>
                 </div>
             </button>
-            <button onclick="selectCategory('furniture')" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left">
+            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🛋️</span>
                 <div>
                     <div id="cat-4-t" class="text-sm font-semibold">Møbler</div>
@@ -69,7 +73,7 @@
         </div>
     </section>
 
-    <!-- Карточка находки -->
+    <!-- Пример карточки находки -->
     <section class="mb-5">
         <h2 id="feed-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Siste hete funn</h2>
         <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
@@ -87,39 +91,41 @@
                 <div id="ai-verdict" class="text-slate-300">Estimert bruktverdi: ~2 500 kr. Ingen defekter oppgitt. Høy etterspørsel!</div>
             </div>
 
-            <button onclick="Telegram.WebApp.openLink('https://www.finn.no')" id="btn-open-finn" class="w-full py-2.5 accent-bg rounded-xl font-medium text-sm text-center shadow-md active:opacity-90">
+            <button onclick="openFinnAd()" id="btn-open-finn" class="w-full py-2.5 accent-bg rounded-xl font-medium text-sm text-center shadow-md active:opacity-90">
                 Se annonse på Finn.no ↗
             </button>
         </div>
     </section>
 
-    <!-- Блок Telegram Stars VIP Оплаты -->
+    <!-- VIP Блок -->
     <section class="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-2xl p-4 text-center">
         <div class="text-xl mb-1 font-bold flex items-center justify-center gap-1.5">
             <span>⭐</span> <span id="vip-title">VIP Sniper</span>
         </div>
         <p id="vip-sub" class="text-xs text-slate-300 mb-3">Motta varsler på 5–15 sekunder før alle andre!</p>
-        <button onclick="buyVip()" id="vip-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-sm shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
-            <span>⭐ Aktiver VIP (250 Stars / ~49 kr)</span>
+        <button onclick="buyVipStars()" id="vip-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-sm shadow-lg active:scale-95 transition">
+            ⭐ Aktiver VIP (250 Stars)
         </button>
     </section>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
 
         const I18N = {
             no: {
                 sub: "Lynrask kupp-radar for Norge",
                 cat: "Velg kategori",
-                c1_t: "Gis bort", c1_d: "Gratis ting",
+                c1_t: "Gis bort", c1_d: "Gratis ting (0 kr)",
                 c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
                 c3_t: "Verktøy", c3_d: "Proff-utstyr",
                 c4_t: "Møbler", c4_d: "Nordic Vintage",
                 feed: "Siste hete funn",
                 ai: "Gemini AI Vurdering:",
-                ai_val: "Estimert bruktverdi: ~2 500 kr. Høy etterspørsel!",
+                ai_val: "Estimert bruktverdi: ~2 500 kr. Ingen defekter oppgitt. Høy etterspørsel!",
                 open: "Se annonse på Finn.no ↗",
                 vip_t: "VIP Sniper",
                 vip_s: "Motta varsler på 5–15 sekunder før alle andre!",
@@ -127,14 +133,14 @@
             },
             ru: {
                 sub: "Быстрый радар выгодных находок в Норвегии",
-                cat: "Выберите категорию",
+                cat: "Выберите категории",
                 c1_t: "Даром (0 kr)", c1_d: "Бесплатные вещи",
                 c2_t: "Техника & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Инструмент", c3_d: "Проф-инструмент",
+                c3_t: "Инструмент", c3_d: "Проф-оборудование",
                 c4_t: "Мебель", c4_d: "Скандинавский винтаж",
                 feed: "Свежие горячие находки",
                 ai: "Оценка Gemini AI:",
-                ai_val: "Оценка перепродажи: ~2 500 kr. Высокий спрос!",
+                ai_val: "Оценка перепродажи: ~2 500 kr. Отличное состояние. Высокий спрос!",
                 open: "Открыть на Finn.no ↗",
                 vip_t: "VIP Sniper Подписка",
                 vip_s: "Моментальные пуши за 5–15 сек раньше всех!",
@@ -142,14 +148,14 @@
             },
             en: {
                 sub: "Fast deal sniper for Finn.no (Norway)",
-                cat: "Select category",
+                cat: "Select categories",
                 c1_t: "Free items", c1_d: "Giveaway 0 kr",
                 c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
                 c3_t: "Power Tools", c3_d: "Pro Equipment",
                 c4_t: "Furniture", c4_d: "Nordic Vintage",
                 feed: "Latest Hot Deals",
                 ai: "Gemini AI Appraisal:",
-                ai_val: "Estimated resale value: ~2 500 kr. High demand!",
+                ai_val: "Estimated resale value: ~2 500 kr. No defects reported. High demand!",
                 open: "Open on Finn.no ↗",
                 vip_t: "VIP Sniper Pass",
                 vip_s: "Instant notifications 5–15s ahead of everyone!",
@@ -157,14 +163,14 @@
             },
             ua: {
                 sub: "Швидкий радар вигідних знахідок у Норвегії",
-                cat: "Оберіть категорію",
+                cat: "Оберіть категорії",
                 c1_t: "Безкоштовно", c1_d: "Речі за 0 kr",
                 c2_t: "Техніка & Apple", c2_d: "iPhone / Mac",
                 c3_t: "Інструмент", c3_d: "Проф-обладнання",
                 c4_t: "Меблі", c4_d: "Скандинавський стиль",
                 feed: "Останні гарячі знахідки",
                 ai: "Оцінка Gemini AI:",
-                ai_val: "Оціночна вартість: ~2 500 kr. Високий попит!",
+                ai_val: "Оціночна вартість: ~2 500 kr. Без дефектів. Високий попит!",
                 open: "Відкрити на Finn.no ↗",
                 vip_t: "VIP Sniper Підписка",
                 vip_s: "Миттєві сповіщення на 5–15 сек швидше за всіх!",
@@ -172,14 +178,14 @@
             },
             pl: {
                 sub: "Szybki radar okazji na Finn.no w Norwegii",
-                cat: "Wybierz kategorię",
+                cat: "Wybierz kategorie",
                 c1_t: "Za darmo (0 kr)", c1_d: "Darmowe rzeczy",
                 c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
                 c3_t: "Narzędzia", c3_d: "Sprzęt profesjonalny",
                 c4_t: "Meble", c4_d: "Nordic Vintage",
                 feed: "Najnowsze okazje",
                 ai: "Ocena Gemini AI:",
-                ai_val: "Szacowana wartość: ~2 500 kr. Duży popyt!",
+                ai_val: "Szacowana wartość: ~2 500 kr. Brak wad. Duży popyt!",
                 open: "Zobacz na Finn.no ↗",
                 vip_t: "Konto VIP Sniper",
                 vip_s: "Powiadomienia w 5–15 sekund przed innymi!",
@@ -187,10 +193,7 @@
             }
         };
 
-        let currentLang = 'no';
-
         function setLang(lang) {
-            currentLang = lang;
             const t = I18N[lang] || I18N.no;
             document.getElementById('sub-title').innerText = t.sub;
             document.getElementById('cat-title').innerText = t.cat;
@@ -210,32 +213,39 @@
             document.getElementById('vip-sub').innerText = t.vip_s;
             document.getElementById('vip-btn').innerText = t.vip_b;
 
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                if (btn.getAttribute('data-l') === lang) {
-                    btn.className = "lang-btn px-2 py-1 rounded-lg text-xs bg-blue-600 text-white font-bold";
+            ['no', 'en', 'ru', 'ua', 'pl'].forEach(l => {
+                const b = document.getElementById('btn-lang-' + l);
+                if (l === lang) {
+                    b.className = "px-2 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white";
                 } else {
-                    btn.className = "lang-btn px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-white";
+                    b.className = "px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-white";
                 }
             });
+
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         }
 
-        function selectCategory(cat) {
-            tg.HapticFeedback.impactOccurred('light');
+        function toggleCategory(elem) {
+            elem.classList.toggle('cat-active');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        function buyVip() {
-            tg.HapticFeedback.notificationOccurred('success');
-            // Закрывает WebApp и триггерит оплату в чате бота
-            tg.sendData(JSON.stringify({ action: "buy_vip", lang: currentLang }));
+        function openFinnAd() {
+            if (tg) {
+                tg.openLink('https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2');
+            } else {
+                window.open('https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2', '_blank');
+            }
         }
 
-        // Автоопределение языка Telegram при старте
-        const userLang = (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || 'no';
-        if (userLang.startsWith('ru')) setLang('ru');
-        else if (userLang.startsWith('uk')) setLang('ua');
-        else if (userLang.startsWith('pl')) setLang('pl');
-        else if (userLang.startsWith('en')) setLang('en');
-        else setLang('no');
+        function buyVipStars() {
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            if (tg) {
+                // Перенаправляем на команду бота в чате
+                tg.openTelegramLink('https://t.me/finn_sniper_bot?start=buy_vip');
+                tg.close();
+            }
+        }
     </script>
 </body>
 </html>
