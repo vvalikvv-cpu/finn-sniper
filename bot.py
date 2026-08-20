@@ -98,6 +98,25 @@ async def handle_start(message: types.Message):
     cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, is_vip) VALUES (?, 'no', 0)", (user_id,))
     conn.commit()
 
+    # Если пользователь нажал кнопку VIP в Mini App
+    if "buy_vip" in (message.text or ""):
+        cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        lang = row[0] if row else "no"
+        t = TEXTS.get(lang, TEXTS["no"])
+        
+        prices = [LabeledPrice(label="VIP Sniper (30 dager)", amount=250)]  # 250 Stars
+        await bot.send_invoice(
+            chat_id=message.chat.id,
+            title=t["invoice_title"],
+            description=t["invoice_desc"],
+            payload=f"vip_sub_{user_id}",
+            currency="XTR",
+            prices=prices,
+            provider_token=""
+        )
+        return
+
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="🇳🇴 Norsk", callback_data="lang_no"),
