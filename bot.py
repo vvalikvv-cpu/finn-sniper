@@ -7,7 +7,7 @@ import html
 import feedparser
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery
 from google import genai
 
@@ -93,13 +93,13 @@ async def analyze_with_gemini(title: str, desc: str, cat: str) -> str:
         return "Attraktivt funn registrert."
 
 @dp.message(CommandStart())
-async def handle_start(message: types.Message):
+async def handle_start(message: types.Message, command: CommandObject):
     user_id = message.from_user.id
     cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, is_vip) VALUES (?, 'no', 0)", (user_id,))
     conn.commit()
 
-    # Если пользователь нажал кнопку VIP в Mini App
-    if "buy_vip" in (message.text or ""):
+    # Проверяем аргумент диплинка (когда пришли из Mini App с параметром buy_vip)
+    if command.args and "buy_vip" in command.args:
         cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
         row = cursor.fetchone()
         lang = row[0] if row else "no"
@@ -131,7 +131,6 @@ async def handle_start(message: types.Message):
         ]
     ])
     await message.answer("Velg språk / Choose language / Выберите язык:", reply_markup=kb)
-
 @dp.callback_query(lambda c: c.data.startswith("lang_"))
 async def set_language(callback: types.CallbackQuery):
     lang = callback.data.split("_")[1]
