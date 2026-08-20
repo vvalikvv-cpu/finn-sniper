@@ -16,14 +16,19 @@
             background-color: var(--tg-theme-button-color, #3b82f6);
             color: var(--tg-theme-button-text-color, #ffffff);
         }
-        .cat-active {
-            border-color: #3b82f6 !important;
-            background-color: rgba(59, 130, 246, 0.15) !important;
+        .toast {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
-<body class="p-4 select-none pb-20">
-    <!-- Шапка с флагами языков -->
+<body class="p-4 select-none pb-24">
+    <!-- Шапка и флаги языков -->
     <header class="flex justify-between items-center mb-5">
         <div>
             <h1 class="text-2xl font-bold tracking-tight">Finn Sniper 🎯</h1>
@@ -38,61 +43,67 @@
         </div>
     </header>
 
-    <!-- Выбор категорий -->
+    <!-- Категории с прямым переходом на Finn.no -->
     <section class="mb-5">
-        <h2 id="cat-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Velg kategori</h2>
+        <h2 id="cat-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Hurtigkategorier på Finn.no</h2>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="toggleCategory(this)" class="cat-btn cat-active flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
+            <button onclick="openCategory('https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2&sort=PUBLISHED_DESC')" class="flex items-center gap-2 p-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🎁</span>
                 <div>
                     <div id="cat-1-t" class="text-sm font-semibold">Gis bort</div>
-                    <div id="cat-1-d" class="text-[10px] text-slate-400">Gratis ting (0 kr)</div>
+                    <div id="cat-1-d" class="text-[10px] text-slate-400">Gratis (0 kr) ↗</div>
                 </div>
             </button>
-            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
+            <button onclick="openCategory('https://www.finn.no/bap/forsale/search.html?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC')" class="flex items-center gap-2 p-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">💻</span>
                 <div>
                     <div id="cat-2-t" class="text-sm font-semibold">Tech & Apple</div>
-                    <div id="cat-2-d" class="text-[10px] text-slate-400">iPhone / Mac</div>
+                    <div id="cat-2-d" class="text-[10px] text-slate-400">iPhone / Mac ↗</div>
                 </div>
             </button>
-            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
+            <button onclick="openCategory('https://www.finn.no/bap/forsale/search.html?category=0.67&sub_category=1.67.3911&sort=PUBLISHED_DESC')" class="flex items-center gap-2 p-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🛠️</span>
                 <div>
                     <div id="cat-3-t" class="text-sm font-semibold">Verktøy</div>
-                    <div id="cat-3-d" class="text-[10px] text-slate-400">Proff-utstyr</div>
+                    <div id="cat-3-d" class="text-[10px] text-slate-400">Proff-utstyr ↗</div>
                 </div>
             </button>
-            <button onclick="toggleCategory(this)" class="cat-btn flex items-center gap-2 p-3 bg-slate-800 border border-slate-700 rounded-xl text-left transition active:scale-95">
+            <button onclick="openCategory('https://www.finn.no/bap/forsale/search.html?category=0.78&sort=PUBLISHED_DESC')" class="flex items-center gap-2 p-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition active:scale-95">
                 <span class="text-xl">🛋️</span>
                 <div>
                     <div id="cat-4-t" class="text-sm font-semibold">Møbler</div>
-                    <div id="cat-4-d" class="text-[10px] text-slate-400">Nordic Vintage</div>
+                    <div id="cat-4-d" class="text-[10px] text-slate-400">Nordic Vintage ↗</div>
                 </div>
             </button>
         </div>
     </section>
 
-    <!-- Пример карточки находки -->
+    <!-- Шаблоны сообщений в 1 клик -->
     <section class="mb-5">
-        <h2 id="feed-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Siste hete funn</h2>
-        <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
-            <div class="flex justify-between items-start mb-2">
-                <span class="text-xs font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md">Oslo</span>
-                <span class="text-sm font-bold text-emerald-400">0 kr</span>
-            </div>
-            <h3 class="font-bold text-base mb-1">Weber Spirit E-310 Gassgrill</h3>
-            <p id="item-desc" class="text-xs text-slate-300 mb-3">«Fungerer helt perfekt. Må hentes i kveld pga. flytting.»</p>
-            
-            <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs mb-3">
-                <div class="flex items-center gap-1.5 font-semibold text-blue-400 mb-1">
-                    <span>✨</span> <span id="ai-label">Gemini AI Vurdering:</span>
+        <h2 id="tmpl-title" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Hurtigmeldinger til selger (kopier)</h2>
+        <div class="space-y-2">
+            <button onclick="copyMsg('Hei! Jeg er veldig interessert og kan hente i dag hvis det passer for deg. Mvh')" class="w-full text-left p-3 bg-slate-800/80 border border-slate-700 rounded-xl active:scale-[0.98] transition">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="tmpl-1-t" class="text-xs font-bold text-blue-400">🚗 Hente i dag / Sammenkomst</span>
+                    <span class="text-[10px] text-slate-500">Kopier 📋</span>
                 </div>
-                <div id="ai-verdict" class="text-slate-300">Estimert bruktverdi: ~2 500 kr. Ingen defekter oppgitt. Høy etterspørsel!</div>
-            </div>
+                <div class="text-xs text-slate-300">«Hei! Jeg er veldig interessert og kan hente i dag hvis det passer for deg. Mvh»</div>
+            </button>
 
-            <button onclick="openFinnAd()" id="btn-open-finn" class="w-full py-2.5 accent-bg rounded-xl font-medium text-sm text-center shadow-md active:opacity-90">
-                Se annonse på Finn.no ↗
+            <button onclick="copyMsg('Hei! Er varen fortsatt tilgjengelig? Kan hente raskt. Mvh')" class="w-full text-left p-3 bg-slate-800/80 border border-slate-700 rounded-xl active:scale-[0.98] transition">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="tmpl-2-t" class="text-xs font-bold text-emerald-400">⚡ Rask handel</span>
+                    <span class="text-[10px] text-slate-500">Kopier 📋</span>
+                </div>
+                <div class="text-xs text-slate-300">«Hei! Er varen fortsatt tilgjengelig? Kan hente raskt. Mvh»</div>
+            </button>
+
+            <button onclick="copyMsg('Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh')" class="w-full text-left p-3 bg-slate-800/80 border border-slate-700 rounded-xl active:scale-[0.98] transition">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="tmpl-3-t" class="text-xs font-bold text-purple-400">📦 Sending med post</span>
+                    <span class="text-[10px] text-slate-500">Kopier 📋</span>
+                </div>
+                <div class="text-xs text-slate-300">«Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh»</div>
             </button>
         </div>
     </section>
@@ -108,6 +119,11 @@
         </button>
     </section>
 
+    <!-- Toast уведомление о копировании -->
+    <div id="toast" class="toast fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg pointer-events-none">
+        Kopiert til utklippstavle! ✅
+    </div>
+
     <script>
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         if (tg) {
@@ -118,82 +134,90 @@
         const I18N = {
             no: {
                 sub: "Lynrask kupp-radar for Norge",
-                cat: "Velg kategori",
-                c1_t: "Gis bort", c1_d: "Gratis ting (0 kr)",
-                c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Verktøy", c3_d: "Proff-utstyr",
-                c4_t: "Møbler", c4_d: "Nordic Vintage",
-                feed: "Siste hete funn",
-                ai: "Gemini AI Vurdering:",
-                ai_val: "Estimert bruktverdi: ~2 500 kr. Ingen defekter oppgitt. Høy etterspørsel!",
-                open: "Se annonse på Finn.no ↗",
+                cat: "Hurtigkategorier på Finn.no",
+                c1_t: "Gis bort", c1_d: "Gratis (0 kr) ↗",
+                c2_t: "Tech & Apple", c2_d: "iPhone / Mac ↗",
+                c3_t: "Verktøy", c3_d: "Proff-utstyr ↗",
+                c4_t: "Møbler", c4_d: "Nordic Vintage ↗",
+                tmpl: "Hurtigmeldinger til selger (kopier)",
+                t1_t: "🚗 Hente i dag / Sammenkomst",
+                t2_t: "⚡ Rask handel",
+                t3_t: "📦 Sending med post",
                 vip_t: "VIP Sniper",
                 vip_s: "Motta varsler på 5–15 sekunder før alle andre!",
-                vip_b: "⭐ Aktiver VIP (250 Stars)"
+                vip_b: "⭐ Aktiver VIP (250 Stars)",
+                copied: "Kopiert til utklippstavle! ✅"
             },
             ru: {
-                sub: "Быстрый радар выгодных находок в Норвегии",
-                cat: "Выберите категории",
-                c1_t: "Даром (0 kr)", c1_d: "Бесплатные вещи",
-                c2_t: "Техника & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Инструмент", c3_d: "Проф-оборудование",
-                c4_t: "Мебель", c4_d: "Скандинавский винтаж",
-                feed: "Свежие горячие находки",
-                ai: "Оценка Gemini AI:",
-                ai_val: "Оценка перепродажи: ~2 500 kr. Отличное состояние. Высокий спрос!",
-                open: "Открыть на Finn.no ↗",
+                sub: "Быстрый радар находок в Норвегии",
+                cat: "Быстрый переход по Finn.no",
+                c1_t: "Даром (Gis bort)", c1_d: "Бесплатные вещи (0 kr) ↗",
+                c2_t: "Техника & Apple", c2_d: "iPhone / MacBook ↗",
+                c3_t: "Инструмент", c3_d: "Проф-инструмент ↗",
+                c4_t: "Мебель", c4_d: "Скандинавский стиль ↗",
+                tmpl: "Шаблоны для продавца (клик = копия)",
+                t1_t: "🚗 Заберу сегодня",
+                t2_t: "⚡ Быстрая сделка",
+                t3_t: "📦 Отправка почтой",
                 vip_t: "VIP Sniper Подписка",
                 vip_s: "Моментальные пуши за 5–15 сек раньше всех!",
-                vip_b: "⭐ Оформить VIP (250 Stars)"
+                vip_b: "⭐ Оформить VIP (250 Stars)",
+                copied: "Скопировано в буфер! ✅"
             },
             en: {
-                sub: "Fast deal sniper for Finn.no (Norway)",
-                cat: "Select categories",
-                c1_t: "Free items", c1_d: "Giveaway 0 kr",
-                c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Power Tools", c3_d: "Pro Equipment",
-                c4_t: "Furniture", c4_d: "Nordic Vintage",
-                feed: "Latest Hot Deals",
-                ai: "Gemini AI Appraisal:",
-                ai_val: "Estimated resale value: ~2 500 kr. No defects reported. High demand!",
-                open: "Open on Finn.no ↗",
+                sub: "Fast deal sniper for Finn.no",
+                cat: "Quick Finn.no categories",
+                c1_t: "Giveaway (Gis bort)", c1_d: "Free items (0 kr) ↗",
+                c2_t: "Tech & Apple", c2_d: "iPhone / Mac ↗",
+                c3_t: "Power Tools", c3_d: "Pro Equipment ↗",
+                c4_t: "Furniture", c4_d: "Nordic Vintage ↗",
+                tmpl: "Seller Message Templates (tap to copy)",
+                t1_t: "🚗 Pickup today",
+                t2_t: "⚡ Quick deal",
+                t3_t: "📦 Shipping",
                 vip_t: "VIP Sniper Pass",
                 vip_s: "Instant notifications 5–15s ahead of everyone!",
-                vip_b: "⭐ Get VIP (250 Stars)"
+                vip_b: "⭐ Get VIP (250 Stars)",
+                copied: "Copied to clipboard! ✅"
             },
             ua: {
-                sub: "Швидкий радар вигідних знахідок у Норвегії",
-                cat: "Оберіть категорії",
-                c1_t: "Безкоштовно", c1_d: "Речі за 0 kr",
-                c2_t: "Техніка & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Інструмент", c3_d: "Проф-обладнання",
-                c4_t: "Меблі", c4_d: "Скандинавський стиль",
-                feed: "Останні гарячі знахідки",
-                ai: "Оцінка Gemini AI:",
-                ai_val: "Оціночна вартість: ~2 500 kr. Без дефектів. Високий попит!",
-                open: "Відкрити на Finn.no ↗",
+                sub: "Швидкий радар знахідок у Норвегії",
+                cat: "Швидкий перехід по Finn.no",
+                c1_t: "Безкоштовно", c1_d: "Речі за 0 kr ↗",
+                c2_t: "Техніка & Apple", c2_d: "iPhone / Mac ↗",
+                c3_t: "Інструмент", c3_d: "Проф-обладнання ↗",
+                c4_t: "Меблі", c4_d: "Скандинавський стиль ↗",
+                tmpl: "Шаблони для продавця (клік = копія)",
+                t1_t: "🚗 Заберу сьогодні",
+                t2_t: "⚡ Швидка угода",
+                t3_t: "📦 Відправка поштою",
                 vip_t: "VIP Sniper Підписка",
                 vip_s: "Миттєві сповіщення на 5–15 сек швидше за всіх!",
-                vip_b: "⭐ Оформити VIP (250 Stars)"
+                vip_b: "⭐ Оформити VIP (250 Stars)",
+                copied: "Скопійовано в буфер! ✅"
             },
             pl: {
-                sub: "Szybki radar okazji na Finn.no w Norwegii",
-                cat: "Wybierz kategorie",
-                c1_t: "Za darmo (0 kr)", c1_d: "Darmowe rzeczy",
-                c2_t: "Tech & Apple", c2_d: "iPhone / Mac",
-                c3_t: "Narzędzia", c3_d: "Sprzęt profesjonalny",
-                c4_t: "Meble", c4_d: "Nordic Vintage",
-                feed: "Najnowsze okazje",
-                ai: "Ocena Gemini AI:",
-                ai_val: "Szacowana wartość: ~2 500 kr. Brak wad. Duży popyt!",
-                open: "Zobacz na Finn.no ↗",
+                sub: "Szybki radar okazji na Finn.no",
+                cat: "Kategorie Finn.no",
+                c1_t: "Za darmo", c1_d: "Darmowe rzeczy (0 kr) ↗",
+                c2_t: "Tech & Apple", c2_d: "iPhone / Mac ↗",
+                c3_t: "Narzędzia", c3_d: "Sprzęt profesjonalny ↗",
+                c4_t: "Meble", c4_d: "Nordic Vintage ↗",
+                tmpl: "Szablony wiadomości (kliknij = kopiuj)",
+                t1_t: "🚗 Odbiór dzisiaj",
+                t2_t: "⚡ Szybka transakcja",
+                t3_t: "📦 Wysyłka pocztą",
                 vip_t: "Konto VIP Sniper",
                 vip_s: "Powiadomienia w 5–15 sekund przed innymi!",
-                vip_b: "⭐ Aktywuj VIP (250 Stars)"
+                vip_b: "⭐ Aktywuj VIP (250 Stars)",
+                copied: "Skopiowano do schowka! ✅"
             }
         };
 
+        let currentLang = 'no';
+
         function setLang(lang) {
+            currentLang = lang;
             const t = I18N[lang] || I18N.no;
             document.getElementById('sub-title').innerText = t.sub;
             document.getElementById('cat-title').innerText = t.cat;
@@ -205,10 +229,10 @@
             document.getElementById('cat-3-d').innerText = t.c3_d;
             document.getElementById('cat-4-t').innerText = t.c4_t;
             document.getElementById('cat-4-d').innerText = t.c4_d;
-            document.getElementById('feed-title').innerText = t.feed;
-            document.getElementById('ai-label').innerText = t.ai;
-            document.getElementById('ai-verdict').innerText = t.ai_val;
-            document.getElementById('btn-open-finn').innerText = t.open;
+            document.getElementById('tmpl-title').innerText = t.tmpl;
+            document.getElementById('tmpl-1-t').innerText = t.t1_t;
+            document.getElementById('tmpl-2-t').innerText = t.t2_t;
+            document.getElementById('tmpl-3-t').innerText = t.t3_t;
             document.getElementById('vip-title').innerText = t.vip_t;
             document.getElementById('vip-sub').innerText = t.vip_s;
             document.getElementById('vip-btn').innerText = t.vip_b;
@@ -225,24 +249,29 @@
             if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         }
 
-        function toggleCategory(elem) {
-            elem.classList.toggle('cat-active');
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        function openCategory(url) {
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            if (tg) {
+                tg.openLink(url);
+            } else {
+                window.open(url, '_blank');
+            }
         }
 
-        function openFinnAd() {
-            if (tg) {
-                tg.openLink('https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2');
-            } else {
-                window.open('https://www.finn.no/bap/forsale/search.html?price_to=0&trade_type=2', '_blank');
-            }
+        function copyMsg(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                const toast = document.getElementById('toast');
+                const t = I18N[currentLang] || I18N.no;
+                toast.innerText = t.copied;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
         }
 
         function buyVipStars() {
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             if (tg) {
-                // Перенаправляем на команду бота в чате
-                tg.openTelegramLink('https://t.me/finn_sniper_bot?start=buy_vip');
                 tg.close();
             }
         }
