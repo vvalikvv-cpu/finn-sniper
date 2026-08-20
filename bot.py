@@ -40,7 +40,7 @@ TEXTS = {
         "btn_vip": "⭐ Оформить VIP (250 Stars)",
         "btn_lang": "🌐 Сменить язык",
         "btn_finn": "Открыть на Finn.no ↗",
-        "invoice_title": "⭐ VIP Sniper (30 дней)",
+        "invoice_title": "VIP Sniper (30 дней)",
         "invoice_desc": "Моментальные персональные уведомления о находках!",
         "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>"
     },
@@ -49,7 +49,7 @@ TEXTS = {
         "btn_vip": "⭐ Aktiver VIP (250 Stars)",
         "btn_lang": "🌐 Endre språk",
         "btn_finn": "Se annonse på Finn.no ↗",
-        "invoice_title": "⭐ VIP Sniper (30 dager)",
+        "invoice_title": "VIP Sniper (30 dager)",
         "invoice_desc": "Motta lynraske varsler om de beste kuppene!",
         "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>"
     },
@@ -58,7 +58,7 @@ TEXTS = {
         "btn_vip": "⭐ Get VIP (250 Stars)",
         "btn_lang": "🌐 Change Language",
         "btn_finn": "Open on Finn.no ↗",
-        "invoice_title": "⭐ VIP Sniper (30 days)",
+        "invoice_title": "VIP Sniper (30 days)",
         "invoice_desc": "Fastest deal alerts directly to your PM!",
         "success_pay": "🎉 <b>VIP activated for 30 days!</b>"
     },
@@ -67,7 +67,7 @@ TEXTS = {
         "btn_vip": "⭐ Оформити VIP (250 Stars)",
         "btn_lang": "🌐 Змінити мову",
         "btn_finn": "Відкрити на Finn.no ↗",
-        "invoice_title": "⭐ VIP Sniper (30 днів)",
+        "invoice_title": "VIP Sniper (30 днів)",
         "invoice_desc": "Миттєві сповіщення про найкращі пропозиції!",
         "success_pay": "🎉 <b>VIP активовано на 30 днів!</b>"
     },
@@ -76,20 +76,20 @@ TEXTS = {
         "btn_vip": "⭐ Aktywuj VIP (250 Stars)",
         "btn_lang": "🌐 Zmień język",
         "btn_finn": "Zobacz na Finn.no ↗",
-        "invoice_title": "⭐ VIP Sniper (30 dni)",
+        "invoice_title": "VIP Sniper (30 dni)",
         "invoice_desc": "Błyskawiczne powiadomienia o okazjach!",
         "success_pay": "🎉 <b>VIP aktywowany na 30 dni!</b>"
     }
 }
 
-def get_main_keyboard(lang: str) -> InlineKeyboardMarkup:
+def get_main_keyboard(lang):
     t = TEXTS.get(lang, TEXTS["no"])
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=t["btn_vip"], callback_data="buy_vip")],
         [InlineKeyboardButton(text=t["btn_lang"], callback_data="open_lang_menu")]
     ])
 
-async def analyze_with_gemini(title: str, desc: str, cat: str) -> str:
+async def analyze_with_gemini(title, desc, cat):
     if not gemini_client:
         return "AI analyse utilgjengelig."
     try:
@@ -148,19 +148,13 @@ async def set_language(callback: types.CallbackQuery):
     await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
     await callback.answer()
 
-# Прямая покупка Telegram Stars по кнопке в чате
-@dp.callback_query(F.data == "buy_vip")
-@dp.message(Command("vip"))
-async def send_stars_invoice(event: types.Message | types.CallbackQuery):
-    user_id = event.from_user.id
-    chat_id = event.message.chat.id if isinstance(event, types.CallbackQuery) else event.chat.id
-
+async def send_invoice_logic(chat_id, user_id):
     cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
     lang = row[0] if row else "no"
     t = TEXTS.get(lang, TEXTS["no"])
 
-    prices = [LabeledPrice(label="VIP Sniper (30 dager)", amount=250)]  # 250 Stars
+    prices = [LabeledPrice(label="VIP Sniper (30 dager)", amount=250)]
     await bot.send_invoice(
         chat_id=chat_id,
         title=t["invoice_title"],
@@ -170,8 +164,15 @@ async def send_stars_invoice(event: types.Message | types.CallbackQuery):
         prices=prices,
         provider_token=""
     )
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
+
+@dp.callback_query(F.data == "buy_vip")
+async def handle_buy_vip_callback(callback: types.CallbackQuery):
+    await send_invoice_logic(callback.message.chat.id, callback.from_user.id)
+    await callback.answer()
+
+@dp.message(Command("vip"))
+async def handle_buy_vip_command(message: types.Message):
+    await send_invoice_logic(message.chat.id, message.from_user.id)
 
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
@@ -205,7 +206,6 @@ async def monitor_finn():
                         cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
                         conn.commit()
 
-                        # 1. Постинг в открытый канал
                         if CHANNEL_ID:
                             channel_text = (
                                 f"🏷️ <b>[{cat_name}]</b>\n"
@@ -221,7 +221,6 @@ async def monitor_finn():
                             except Exception as ce:
                                 logging.error(f"Channel send error: {ce}")
 
-                        # 2. Моментальная рассылка пользователям
                         cursor.execute("SELECT user_id, lang FROM users")
                         users = cursor.fetchall()
                         for uid, lang in users:
@@ -250,11 +249,12 @@ async def handle_ping(request):
 
 async def start_web_server():
     app = web.Application()
+    # add_get автоматически обрабатывает и GET, и HEAD запросы
     app.router.add_get("/", handle_ping)
-    app.router.add_head("/", handle_ping)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 10000)
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
 async def main():
