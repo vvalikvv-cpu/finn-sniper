@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finn Sniper Radar</title>
+    <title>Finn Sniper Studio</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -16,49 +16,31 @@
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-50%, 0, 0); }
         }
-        .ticker-wrap {
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .ticker-move {
-            display: inline-flex;
-            white-space: nowrap;
-            animation: ticker 25s linear infinite;
-        }
-        .ticker-move:hover, .ticker-move:active {
-            animation-play-state: paused;
-        }
-        .tag-chip {
-            background: rgba(30, 58, 138, 0.5);
-            border: 1px solid rgba(59, 130, 246, 0.4);
-        }
-        .reg-active {
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker-move { display: inline-flex; white-space: nowrap; animation: ticker 25s linear infinite; }
+        .ticker-move:hover, .ticker-move:active { animation-play-state: paused; }
+        .chip-active {
             border-color: #3b82f6 !important;
             background-color: #1d4ed8 !important;
             color: #ffffff !important;
             font-weight: 700;
         }
-        .toast {
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-        }
+        .toast { visibility: hidden; opacity: 0; transition: opacity 0.3s, visibility 0.3s; }
+        .toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body class="p-3.5 select-none pb-28">
 
-    <!-- 1. ВЕРХНИЙ КОКПИТ СТАТУСА -->
+    <!-- 1. ШАПКА И ЯЗЫКИ -->
     <header class="flex justify-between items-center mb-3">
-        <div class="flex items-center gap-2">
-            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
-            <h1 class="text-xl font-black tracking-tight text-white">FINN SNIPER</h1>
-            <span id="vip-badge" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                FREE (2/2 tags)
-            </span>
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl font-black tracking-tight text-white">FINN SNIPER</h1>
+                <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+                </span>
+            </div>
+            <p id="sub-title" class="text-[11px] text-slate-400">Konfigurer dine jaktprofiler</p>
         </div>
         <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button onclick="setLang('no')" id="btn-lang-no" class="px-1.5 py-0.5 rounded-lg text-xs font-bold bg-blue-600 text-white">🇳🇴</button>
@@ -69,85 +51,94 @@
         </div>
     </header>
 
-    <!-- 2. БЕГУЩАЯ СТРОКА: ДИНАМИЧЕСКИЙ ПУЛЬС НАХОДОК -->
+    <!-- 2. БЕГУЩАЯ СТРОКА -->
     <div class="bg-slate-900/90 border border-blue-500/20 rounded-xl py-1.5 px-2 mb-3.5 flex items-center gap-2 shadow-inner">
         <span class="text-[10px] font-black uppercase text-blue-400 flex items-center gap-1 shrink-0 bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800/60">
-            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> PULSE
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> LIVE
         </span>
         <div class="ticker-wrap w-full">
             <div id="ticker-content" class="ticker-move text-xs text-slate-300 font-medium space-x-6">
-                <span>🔥 [0 kr] Weber Spirit Grill (Sarpsborg)</span>
-                <span>⚡ Kemppi Minarc 150 (Fredrikstad)</span>
-                <span>⭐ iPhone 15 Pro 128GB (Oslo)</span>
-                <span>🎁 Chesterfield Skinnsofa (Moss)</span>
+                <span>🔥 [0 kr] Weber Grill (Sarpsborg)</span>
+                <span>⚡ [1 200 kr] Kemppi Minarc (Fredrikstad)</span>
+                <span>🎮 [4 200 kr] Sony PS5 Slim (Moss)</span>
+                <span>🛠️ [900 kr] Milwaukee M18 (Halden)</span>
             </div>
         </div>
     </div>
 
-    <!-- 3. БЫСТРЫЕ ПРОФИЛИ ОХОТЫ -->
-    <section class="mb-3.5">
-        <div class="flex justify-between items-center mb-1.5">
-            <h2 id="preset-title" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jaktprofiler (Forhåndsinnstillinger)</h2>
+    <!-- 3. ПРОФИЛИ ОХОТЫ (СОЗДАНИЕ, ВЫБОР, УДАЛЕНИЕ) -->
+    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+            <h2 id="prof-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">📁 Mine Jaktprofiler</h2>
+            <button onclick="openNewProfileModal()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-lg transition active:scale-95">
+                ➕ Ny Profil
+            </button>
         </div>
-        <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            <button onclick="applyPreset('tools')" class="shrink-0 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500 text-xs rounded-xl flex items-center gap-1.5 font-medium transition active:scale-95">
-                <span>🧰</span> <span>Proff Verktøy (Østfold)</span>
-            </button>
-            <button onclick="applyPreset('tech')" class="shrink-0 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500 text-xs rounded-xl flex items-center gap-1.5 font-medium transition active:scale-95">
-                <span>💻</span> <span>Tech & Gaming (Norge)</span>
-            </button>
-            <button onclick="applyPreset('free')" class="shrink-0 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500 text-xs rounded-xl flex items-center gap-1.5 font-medium transition active:scale-95">
-                <span>🎁</span> <span>Gis bort / Lokalt (0 kr)</span>
-            </button>
+        <div id="profiles-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <!-- Динамические профили -->
         </div>
     </section>
 
-    <!-- 4. СНАЙПЕР-ТЕГИ ПОЛЬЗОВАТЕЛЯ -->
+    <!-- 4. СНАЙПЕР-ТЕГИ (КЛЮЧЕВЫЕ СЛОВА) -->
     <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
         <div class="flex justify-between items-center mb-2">
-            <h2 id="tags-title" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <span>🎯</span> <span id="tags-label">Dine Sniper-tags (Nøkkelord)</span>
+            <h2 id="tags-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                <span>🎯</span> <span>Aktive Søkeord (Tags)</span>
             </h2>
-            <span id="tags-counter" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">2 / 2 aktive</span>
+            <span id="tags-count" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">0 aktive</span>
         </div>
         
-        <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5">
-            <span class="tag-chip text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 text-blue-200">
-                Kemppi Sveiseapparat <button onclick="removeTag(this)" class="text-slate-400 hover:text-red-400 ml-1">×</button>
-            </span>
-            <span class="tag-chip text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 text-blue-200">
-                PlayStation 5 <button onclick="removeTag(this)" class="text-slate-400 hover:text-red-400 ml-1">×</button>
-            </span>
-        </div>
+        <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
 
         <div class="flex gap-1.5">
-            <input type="text" id="new-tag-input" placeholder="+ Legg til søkeord..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
-            <button onclick="addTag()" id="btn-add-tag" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
+            <input type="text" id="tag-input" placeholder="+ Legg til vare (f.eks. PS5 Pro, Kemppi, Makita)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
+            <button onclick="addTagFromInput()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
                 Legg til
             </button>
         </div>
     </section>
 
-    <!-- 5. СЕЛЕКТОР ЛОКАЦИЙ -->
-    <section class="mb-3.5">
-        <h2 id="reg-title" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Aktiv Sone (Område)</h2>
-        <div class="grid grid-cols-2 gap-1.5">
-            <button onclick="setLoc(this, '0.20001', 'Østfold (Sarpsborg/Fr.stad)')" class="reg-chip reg-active p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-left text-xs transition active:scale-95">
-                🎯 Østfold (Sarpsborg/Fr.stad)
+    <!-- 5. ЦЕНОВОЙ ДИАПАЗОН (PRICE FILTER) -->
+    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+            <h2 id="price-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">💰 Prisintervall (NOK)</h2>
+            <button onclick="setFreeOnly()" id="btn-free-toggle" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold">
+                🎁 Kun Gis bort (0 kr)
             </button>
-            <button onclick="setLoc(this, '0.20061', 'Oslo')" class="reg-chip p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-left text-xs text-slate-300 transition active:scale-95">
-                🏙️ Oslo
-            </button>
-            <button onclick="setLoc(this, '0.22030', 'Akershus / Bærum / Ski')" class="reg-chip p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-left text-xs text-slate-300 transition active:scale-95">
-                🌲 Akershus / Bærum
-            </button>
-            <button onclick="setLoc(this, '', 'Hele Norge')" class="reg-chip p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-left text-xs text-slate-300 transition active:scale-95">
-                🇳🇴 Hele Norge (Alle)
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Fra pris (kr):</label>
+                <input type="number" id="price-min" placeholder="0" oninput="saveCurrentSettings()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Til pris (kr):</label>
+                <input type="number" id="price-max" placeholder="Maks (f.eks. 3500)" oninput="saveCurrentSettings()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. РЕГИОНЫ И ГОРОДА (МУЛЬТИВЫБОР + ДОБАВЛЕНИЕ СВОИХ) -->
+    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+            <h2 id="reg-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">📍 Områder & Byer</h2>
+            <span id="reg-count" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">0 valgt</span>
+        </div>
+
+        <div id="regions-container" class="flex flex-wrap gap-1.5 mb-2.5">
+            <!-- Города Østfold и Норвегии -->
+        </div>
+
+        <!-- Добавление своего города/коммуны -->
+        <div class="flex gap-1.5">
+            <input type="text" id="custom-city-input" placeholder="+ Legg til din by/kommune..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
+            <button onclick="addCustomCity()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
+                + By
             </button>
         </div>
     </section>
 
-    <!-- 6. ЖИВАЯ ЛЕНТА РЕАЛЬНЫХ НАХОДОК СЕРВЕРА -->
+    <!-- 7. ЖИВАЯ ЛЕНТА НАХОДОК -->
     <section class="mb-4">
         <div class="flex justify-between items-center mb-2">
             <h2 id="feed-head" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Siste Live Funn på Finn.no</h2>
@@ -155,297 +146,288 @@
                 🔄 <span id="lbl-refresh">Oppdater</span>
             </button>
         </div>
+        <div id="live-cards-container" class="space-y-3"></div>
+    </section>
 
-        <div id="live-cards-container" class="space-y-3">
-            <!-- Сюда динамически загружаются карточки из /api/items -->
-            <div class="text-center py-6 text-xs text-slate-500 animate-pulse">
-                Laster inn sanntids-kupp fra radaren... 📡
+    <!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПРОФИЛЯ -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm shadow-2xl">
+            <h3 class="text-sm font-bold text-white mb-2">💾 Lagre ny Jaktprofil</h3>
+            <p class="text-xs text-slate-400 mb-3">Nåværende søkeord, prisintervall og byer lagres i denne profilen.</p>
+            <input type="text" id="modal-prof-name" placeholder="Profilnavn (f.eks. Garasje Sarpsborg)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 mb-3 focus:outline-none focus:border-blue-500">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="closeProfileModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Avbryt</button>
+                <button onclick="saveNewProfile()" class="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Lagre Profil</button>
             </div>
         </div>
-    </section>
-
-    <!-- 7. VIP STARS BANNER -->
-    <section class="bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-slate-900 border border-amber-500/30 rounded-2xl p-3.5 text-center">
-        <div class="text-sm mb-1 font-bold flex items-center justify-center gap-1.5 text-amber-300">
-            <span>⭐</span> <span id="vip-title">Lås opp VIP Sniper</span>
-        </div>
-        <p id="vip-sub" class="text-xs text-slate-300 mb-3">15 Sniper-tags • 5 samtidige regioner • 5–15s forsprang</p>
-        <button onclick="buyVip()" id="vip-btn" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
-            ⭐ Oppgrader til VIP (250 Stars)
-        </button>
-    </section>
+    </div>
 
     <!-- Toast -->
-    <div id="toast" class="toast fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl pointer-events-none">
-        Kopiert! ✅
+    <div id="toast" class="toast fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl pointer-events-none z-50">
+        Lagret! ✅
     </div>
 
     <script>
         const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if (tg) {
-            tg.expand();
-            tg.ready();
-        }
+        if (tg) { tg.expand(); tg.ready(); }
 
         const API_BASE = "https://finn-sniper-bot.onrender.com";
         let currentLang = 'no';
-        let isVip = false;
-        let selectedLocation = '0.20001';
 
-        const I18N = {
-            no: {
-                badge: "FREE (2/2 tags)",
-                preset_t: "Jaktprofiler (Forhåndsinnstillinger)",
-                tags_lbl: "Dine Sniper-tags (Nøkkelord)",
-                reg_t: "Aktiv Sone (Område)",
-                feed_h: "Siste Live Funn på Finn.no",
-                ref: "Oppdater",
-                vip_t: "Lås opp VIP Sniper",
-                vip_s: "15 Sniper-tags • 5 regioner • 5–15s forsprang",
-                vip_b: "⭐ Oppgrader til VIP (250 Stars)",
-                copied: "Melding kopiert! Lim inn på Finn.no ✅",
-                btn_copy: "💬 Melding (Kopier)",
-                btn_open: "Se på Finn.no ↗",
-                no_items: "Radaren overvåker Finn.no... Nye kupp vises her straks!"
-            },
-            ru: {
-                badge: "FREE (2/2 цели)",
-                preset_t: "Профили охоты (Пресеты в 1 клик)",
-                tags_lbl: "Ваши Снайпер-цели (Теги)",
-                reg_t: "Активная зона (Регион)",
-                feed_h: "Свежие находки с Finn.no (Реальное время)",
-                ref: "Обновить",
-                vip_t: "VIP Sniper Доступ",
-                vip_s: "До 15 целей • Все регионы • Пуши за 5–15 сек",
-                vip_b: "⭐ Активировать VIP (250 Stars)",
-                copied: "Текст скопирован! Вставьте на Finn.no ✅",
-                btn_copy: "💬 Текст продавцу",
-                btn_open: "Открыть на Finn.no ↗",
-                no_items: "Радар сканирует Finn.no... Свежие находки появятся здесь!"
-            },
-            en: {
-                badge: "FREE (2/2 tags)",
-                preset_t: "Hunting Profiles (Presets)",
-                tags_lbl: "Your Sniper Targets (Tags)",
-                reg_t: "Active Location Zone",
-                feed_h: "Latest Real-time Deals from Finn.no",
-                ref: "Refresh",
-                vip_t: "Unlock VIP Sniper Pass",
-                vip_s: "15 Sniper tags • 5 regions • 5–15s head start",
-                vip_b: "⭐ Upgrade to VIP (250 Stars)",
-                copied: "Template copied to clipboard! ✅",
-                btn_copy: "💬 Copy message",
-                btn_open: "Open on Finn.no ↗",
-                no_items: "Radar scanning Finn.no... Deals will appear shortly!"
-            },
-            ua: {
-                badge: "FREE (2/2 цілі)",
-                preset_t: "Профілі полювання (Пресети)",
-                tags_lbl: "Ваші Снайпер-цілі (Теги)",
-                reg_t: "Активна зона (Регіон)",
-                feed_h: "Свіжі знахідки з Finn.no (Реальний час)",
-                ref: "Оновити",
-                vip_t: "VIP Sniper Доступ",
-                vip_s: "15 цілей • Всі регіони • Сповіщення за 5–15 сек",
-                vip_b: "⭐ Оформити VIP (250 Stars)",
-                copied: "Повідомлення скопійовано! ✅",
-                btn_copy: "💬 Текст продавцю",
-                btn_open: "Відкрити на Finn.no ↗",
-                no_items: "Радар моніторить Finn.no... Очікуйте на знахідки!"
-            },
-            pl: {
-                badge: "FREE (2/2 tagi)",
-                preset_t: "Profile polowań (Presety)",
-                tags_lbl: "Twoje Cele Snajpera (Tagi)",
-                reg_t: "Aktywna Strefa",
-                feed_h: "Najnowsze okazje z Finn.no",
-                ref: "Odśwież",
-                vip_t: "Odblokuj VIP Sniper",
-                vip_s: "15 celów • 5 regionów • Alerty w 5–15 sek",
-                vip_b: "⭐ Aktywuj VIP (250 Stars)",
-                copied: "Wiadomość skopiowana! ✅",
-                btn_copy: "💬 Skopiuj tekst",
-                btn_open: "Zobacz na Finn.no ↗",
-                no_items: "Radar skanuje Finn.no... Okazje pojawią się wkrótce!"
-            }
+        // Состояние приложения (State)
+        let appState = {
+            activeProfileId: 'prof_1',
+            tags: ['Kemppi Sveiseapparat', 'PlayStation 5'],
+            priceMin: '',
+            priceMax: '',
+            isFreeOnly: false,
+            cities: ['Sarpsborg', 'Fredrikstad'],
+            allCitiesList: ['Sarpsborg', 'Fredrikstad', 'Moss', 'Halden', 'Hvaler', 'Råde', 'Oslo', 'Drammen', 'Bergen', 'Trondheim', 'Stavanger'],
+            profiles: [
+                { id: 'prof_1', name: '🧰 Verktøy Østfold', tags: ['Kemppi', 'Makita 18V', 'Milwaukee'], priceMin: '', priceMax: '3000', cities: ['Sarpsborg', 'Fredrikstad', 'Halden'] },
+                { id: 'prof_2', name: '💻 Tech Resale', tags: ['PlayStation 5', 'iPhone 15', 'RTX 4080'], priceMin: '1000', priceMax: '6000', cities: ['Oslo', 'Sarpsborg', 'Moss'] },
+                { id: 'prof_3', name: '🎁 Gis bort Lokalt', tags: ['Weber Grill', 'Skinnsofa', 'Gressklipper'], priceMin: '0', priceMax: '0', cities: ['Sarpsborg', 'Fredrikstad'] }
+            ]
         };
 
-        function setLang(lang) {
-            currentLang = lang;
-            const t = I18N[lang] || I18N.no;
-            document.getElementById('preset-title').innerText = t.preset_t;
-            document.getElementById('tags-label').innerText = t.tags_lbl;
-            document.getElementById('reg-title').innerText = t.reg_t;
-            document.getElementById('feed-head').innerText = t.feed_h;
-            document.getElementById('lbl-refresh').innerText = t.ref;
-            document.getElementById('vip-title').innerText = t.vip_t;
-            document.getElementById('vip-sub').innerText = t.vip_s;
-            document.getElementById('vip-btn').innerText = t.vip_b;
-
-            ['no', 'en', 'ru', 'ua', 'pl'].forEach(l => {
-                const b = document.getElementById('btn-lang-' + l);
-                if (l === lang) {
-                    b.className = "px-1.5 py-0.5 rounded-lg text-xs font-bold bg-blue-600 text-white";
-                } else {
-                    b.className = "px-1.5 py-0.5 rounded-lg text-xs text-slate-400 hover:text-white";
-                }
-            });
-
-            loadLiveFeed();
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        // Загрузка сохраненного состояния
+        function loadSavedState() {
+            const local = localStorage.getItem('finn_sniper_state');
+            if (local) {
+                try { Object.assign(appState, JSON.parse(local)); } catch(e){}
+            }
+            renderAll();
         }
 
+        function saveCurrentSettings() {
+            appState.priceMin = document.getElementById('price-min').value;
+            appState.priceMax = document.getElementById('price-max').value;
+            localStorage.setItem('finn_sniper_state', JSON.stringify(appState));
+        }
+
+        function renderAll() {
+            renderProfiles();
+            renderTags();
+            renderCities();
+            document.getElementById('price-min').value = appState.priceMin || '';
+            document.getElementById('price-max').value = appState.priceMax || '';
+            updateFreeBtnStyle();
+        }
+
+        // --- ПРОФИЛИ ---
+        function renderProfiles() {
+            const container = document.getElementById('profiles-list');
+            container.innerHTML = '';
+            appState.profiles.forEach(p => {
+                const isActive = p.id === appState.activeProfileId;
+                const btn = document.createElement('div');
+                btn.className = `shrink-0 p-2 rounded-xl text-xs flex items-center gap-2 border transition ${isActive ? 'bg-blue-600/30 border-blue-500 text-white font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-300'}`;
+                btn.innerHTML = `
+                    <span onclick="applyProfile('${p.id}')" class="cursor-pointer">${p.name}</span>
+                    <button onclick="deleteProfile('${p.id}')" class="text-slate-400 hover:text-red-400 font-bold ml-1">×</button>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function applyProfile(id) {
+            const p = appState.profiles.find(x => x.id === id);
+            if (!p) return;
+            appState.activeProfileId = id;
+            appState.tags = [...p.tags];
+            appState.priceMin = p.priceMin || '';
+            appState.priceMax = p.priceMax || '';
+            appState.cities = [...p.cities];
+            saveCurrentSettings();
+            renderAll();
+            showToast('Profil aktivert! 🎯');
+        }
+
+        function deleteProfile(id) {
+            if (appState.profiles.length <= 1) {
+                alert('Du må ha minst én profil!');
+                return;
+            }
+            appState.profiles = appState.profiles.filter(p => p.id !== id);
+            if (appState.activeProfileId === id) appState.activeProfileId = appState.profiles[0].id;
+            saveCurrentSettings();
+            renderProfiles();
+            showToast('Profil slettet! 🗑️');
+        }
+
+        function openNewProfileModal() {
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+        function saveNewProfile() {
+            const nameInput = document.getElementById('modal-prof-name');
+            const name = nameInput.value.trim() || 'Min Profil';
+            const newId = 'prof_' + Date.now();
+            appState.profiles.push({
+                id: newId,
+                name: name,
+                tags: [...appState.tags],
+                priceMin: document.getElementById('price-min').value,
+                priceMax: document.getElementById('price-max').value,
+                cities: [...appState.cities]
+            });
+            appState.activeProfileId = newId;
+            nameInput.value = '';
+            closeProfileModal();
+            saveCurrentSettings();
+            renderProfiles();
+            showToast('Ny profil lagret! 💾');
+        }
+
+        // --- ТЕГИ ---
+        function renderTags() {
+            const container = document.getElementById('tags-container');
+            container.innerHTML = '';
+            appState.tags.forEach((tag, idx) => {
+                const span = document.createElement('span');
+                span.className = "bg-blue-950/70 border border-blue-800/80 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
+                span.innerHTML = `<span>${tag}</span><button onclick="removeTag(${idx})" class="text-slate-400 hover:text-red-400 font-bold">×</button>`;
+                container.appendChild(span);
+            });
+            document.getElementById('tags-count').innerText = `${appState.tags.length} aktive`;
+        }
+
+        function addTagFromInput() {
+            const input = document.getElementById('tag-input');
+            const val = input.value.trim();
+            if (!val) return;
+            appState.tags.push(val);
+            input.value = '';
+            saveCurrentSettings();
+            renderTags();
+            showToast('Søkeord lagt til! 🎯');
+        }
+
+        function removeTag(idx) {
+            appState.tags.splice(idx, 1);
+            saveCurrentSettings();
+            renderTags();
+        }
+
+        // --- ЦЕНА ---
+        function setFreeOnly() {
+            appState.isFreeOnly = !appState.isFreeOnly;
+            if (appState.isFreeOnly) {
+                document.getElementById('price-min').value = '0';
+                document.getElementById('price-max').value = '0';
+            } else {
+                document.getElementById('price-min').value = '';
+                document.getElementById('price-max').value = '';
+            }
+            saveCurrentSettings();
+            updateFreeBtnStyle();
+        }
+
+        function updateFreeBtnStyle() {
+            const btn = document.getElementById('btn-free-toggle');
+            if (appState.isFreeOnly || (document.getElementById('price-min').value === '0' && document.getElementById('price-max').value === '0')) {
+                btn.className = "text-[10px] bg-emerald-600 border border-emerald-500 text-white px-2 py-0.5 rounded-lg font-bold";
+            } else {
+                btn.className = "text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold";
+            }
+        }
+
+        // --- РЕГИОНЫ / ГОРОДА ---
+        function renderCities() {
+            const container = document.getElementById('regions-container');
+            container.innerHTML = '';
+            appState.allCitiesList.forEach(city => {
+                const isChecked = appState.cities.includes(city);
+                const chip = document.createElement('button');
+                chip.className = `p-2 rounded-xl text-xs border transition ${isChecked ? 'chip-active' : 'bg-slate-900 border-slate-800 text-slate-300'}`;
+                chip.innerText = (city === 'Sarpsborg' || city === 'Fredrikstad') ? `🎯 ${city}` : city;
+                chip.onclick = () => toggleCity(city);
+                container.appendChild(chip);
+            });
+            document.getElementById('reg-count').innerText = `${appState.cities.length} valgt`;
+        }
+
+        function toggleCity(city) {
+            if (appState.cities.includes(city)) {
+                appState.cities = appState.cities.filter(c => c !== city);
+            } else {
+                appState.cities.push(city);
+            }
+            saveCurrentSettings();
+            renderCities();
+        }
+
+        function addCustomCity() {
+            const input = document.getElementById('custom-city-input');
+            const val = input.value.trim();
+            if (!val) return;
+            if (!appState.allCitiesList.includes(val)) {
+                appState.allCitiesList.push(val);
+                appState.cities.push(val);
+            }
+            input.value = '';
+            saveCurrentSettings();
+            renderCities();
+            showToast(`Lagt til ${val}! 📍`);
+        }
+
+        // --- ЖИВАЯ ЛЕНТА С КАРТОЧКАМИ ---
         async function loadLiveFeed() {
             const container = document.getElementById('live-cards-container');
-            const ticker = document.getElementById('ticker-content');
-            const t = I18N[currentLang] || I18N.no;
-
             try {
                 const res = await fetch(`${API_BASE}/api/items`);
                 const data = await res.json();
-
-                if (!data.items || data.items.length === 0) {
-                    container.innerHTML = `<div class="p-4 bg-slate-900/60 rounded-xl text-center text-xs text-slate-400">${t.no_items}</div>`;
+                if (data.items && data.items.length > 0) {
+                    renderCards(data.items);
                     return;
                 }
+            } catch(e){}
 
-                // 1. Отрисовка динамических карточек
-                container.innerHTML = '';
-                let tickerHtml = '';
+            // Запасная лента при холодном старте сервера
+            renderCards([
+                { title: "Kemppi Minarc 150 Sveiseapparat", cat: "Verktøy", summary: "Lite brukt sveiser med kabler og koffert. Sarpsborg.", ai_verdict: "Superkupp! Bruktverdi ~2 800 kr. Besparelse: ~1 600 kr.", link: "https://www.finn.no" },
+                { title: "Weber Spirit E-310 Gassgrill", cat: "Gis bort (0 kr)", summary: "Fungerer helt perfekt. Må hentes i kveld i Fredrikstad.", ai_verdict: "0 kr! Utmerket stand, etterspørsel er enorm.", link: "https://www.finn.no" }
+            ]);
+        }
 
-                data.items.forEach(item => {
-                    tickerHtml += `<span>⚡ [${item.cat}] ${item.title}</span>`;
-
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg";
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-1.5">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md border border-blue-500/30">${item.cat}</span>
-                                <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">🔥 Score: 9.1 / 10</span>
-                            </div>
-                            <button onclick="toggleFav(this)" class="text-slate-400 hover:text-red-400 text-base">🤍</button>
-                        </div>
-                        <h3 class="font-bold text-sm text-white mb-1">${item.title}</h3>
-                        ${item.summary ? `<p class="text-xs text-slate-400 mb-2 line-clamp-2">«${item.summary}»</p>` : ''}
-                        
-                        <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-xs mb-3">
-                            <div class="flex items-center gap-1 font-bold text-blue-400 mb-0.5">
-                                <span>✨</span> <span>Gemini AI:</span>
-                            </div>
-                            <div class="text-slate-300">${item.ai_verdict}</div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="copyMsg('Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl text-center border border-slate-700 transition active:scale-95">
-                                ${t.btn_copy}
-                            </button>
-                            <button onclick="openLink('${item.link}')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl text-center shadow-md transition active:scale-95">
-                                ${t.btn_open}
-                            </button>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-
-                if (tickerHtml) ticker.innerHTML = tickerHtml;
-
-            } catch (err) {
-                console.error("Feed error:", err);
-                container.innerHTML = `
-                    <div class="p-4 bg-slate-900/60 rounded-xl text-center text-xs text-slate-400">
-                        ${t.no_items}
+        function renderCards(items) {
+            const container = document.getElementById('live-cards-container');
+            container.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1.5">
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md border border-blue-500/30">${item.cat}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">🔥 Hot Deal</span>
+                    </div>
+                    <h3 class="font-bold text-sm text-white mb-1">${item.title}</h3>
+                    <p class="text-xs text-slate-400 mb-2">${item.summary || ''}</p>
+                    <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-xs mb-3 text-slate-300">
+                        <span class="font-bold text-blue-400">✨ Gemini AI:</span> ${item.ai_verdict}
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="copyFastMsg('${item.title}')" class="py-2 bg-slate-800 text-white text-xs font-semibold rounded-xl text-center border border-slate-700">💬 Melding</button>
+                        <button onclick="openLink('${item.link}')" class="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl text-center">Se på Finn ↗</button>
                     </div>
                 `;
-            }
-        }
-
-        function setLoc(elem, code, label) {
-            selectedLocation = code;
-            document.querySelectorAll('.reg-chip').forEach(b => {
-                b.classList.remove('reg-active');
-                b.classList.add('text-slate-300');
+                container.appendChild(card);
             });
-            elem.classList.add('reg-active');
-            elem.classList.remove('text-slate-300');
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function addTag() {
-            const input = document.getElementById('new-tag-input');
-            const val = input.value.trim();
-            if (!val) return;
-
-            const container = document.getElementById('tags-container');
-            const chips = container.querySelectorAll('.tag-chip');
-            
-            if (!isVip && chips.length >= 2) {
-                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-                alert(currentLang === 'ru' ? 'В бесплатной версии доступно 2 цели. Оформите VIP для 15 тегов! ⭐' : 'Free grense er 2 tags. Oppgrader til VIP for 15 tags! ⭐');
-                return;
-            }
-
-            const span = document.createElement('span');
-            span.className = "tag-chip text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 text-blue-200";
-            span.innerHTML = `${val} <button onclick="removeTag(this)" class="text-slate-400 hover:text-red-400 ml-1">×</button>`;
-            container.appendChild(span);
-            input.value = '';
-
-            updateTagCounter();
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        function copyFastMsg(title) {
+            const txt = `Hei! Jeg er veldig interessert i ${title} og kan hente i dag/kveld. Passer det? Mvh`;
+            navigator.clipboard.writeText(txt).then(() => showToast('Melding kopiert! Lim inn på Finn.no ✅'));
         }
 
-        function removeTag(btn) {
-            btn.parentElement.remove();
-            updateTagCounter();
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function updateTagCounter() {
-            const count = document.querySelectorAll('#tags-container .tag-chip').length;
-            const max = isVip ? 15 : 2;
-            document.getElementById('tags-counter').innerText = `${count} / ${max} ${currentLang === 'ru' ? 'активно' : 'aktive'}`;
-        }
-
-        function applyPreset(type) {
-            const container = document.getElementById('tags-container');
-            container.innerHTML = '';
-            if (type === 'tools') {
-                ['Kemppi Sveiseapparat', 'Makita / Milwaukee 18V'].forEach(createChip);
-            } else if (type === 'tech') {
-                ['PlayStation 5 Pro', 'RTX 4080 / MacBook'].forEach(createChip);
-            } else if (type === 'free') {
-                ['Gis bort Hage/Grill', 'Skinnsofa Vintage'].forEach(createChip);
-            }
-            updateTagCounter();
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        }
-
-        function createChip(text) {
-            const span = document.createElement('span');
-            span.className = "tag-chip text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 text-blue-200";
-            span.innerHTML = `${text} <button onclick="removeTag(this)" class="text-slate-400 hover:text-red-400 ml-1">×</button>`;
-            document.getElementById('tags-container').appendChild(span);
-        }
-
-        function toggleFav(btn) {
-            if (btn.innerText === '🤍') {
-                btn.innerText = '❤️';
-                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            } else {
-                btn.innerText = '🤍';
-            }
-        }
-
-        function copyMsg(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                const toast = document.getElementById('toast');
-                const t = I18N[currentLang] || I18N.no;
-                toast.innerText = t.copied;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2200);
-            });
         }
 
         function openLink(url) {
@@ -453,12 +435,16 @@
             else window.open(url, '_blank');
         }
 
-        function buyVip() {
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            if (tg) tg.close();
+        function setLang(l) {
+            currentLang = l;
+            ['no', 'en', 'ru', 'ua', 'pl'].forEach(lang => {
+                const b = document.getElementById('btn-lang-' + lang);
+                b.className = (lang === l) ? "px-1.5 py-0.5 rounded-lg text-xs font-bold bg-blue-600 text-white" : "px-1.5 py-0.5 rounded-lg text-xs text-slate-400";
+            });
         }
 
-        // Запуск при загрузке
+        // Запуск
+        loadSavedState();
         loadLiveFeed();
     </script>
 </body>
