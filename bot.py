@@ -3,6 +3,8 @@ import asyncio
 import logging
 import sqlite3
 import html
+import re
+import json
 import feedparser
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
@@ -26,8 +28,16 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # База данных
 conn = sqlite3.connect("bot_data.db", check_same_thread=False)
 cursor = conn.cursor()
-cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, lang TEXT, region TEXT DEFAULT 'ostfold', is_vip INTEGER DEFAULT 0)")
-cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY,
+        lang TEXT DEFAULT 'no',
+        is_vip INTEGER DEFAULT 0,
+        settings_json TEXT DEFAULT '{}'
+    )
+""")
+
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS items_feed (
         item_id TEXT PRIMARY KEY,
@@ -36,9 +46,12 @@ cursor.execute("""
         ai_verdict TEXT,
         cat TEXT,
         link TEXT,
+        image_url TEXT,
+        price TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
+cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
 conn.commit()
 
 FEEDS = {
@@ -47,30 +60,20 @@ FEEDS = {
     "Verktøy": "https://www.finn.no/bap/forsale/search.rss?category=0.67&sub_category=1.67.3911&sort=PUBLISHED_DESC"
 }
 
-TEXTS = {
-    "ru": {
-        "menu": "🎯 <b>Панель управления Finn Sniper</b>\n\nРадар активен 24/7. Нажмите «Finn Radar» внизу для настройки профилей, тегов и городов.",
-        "btn_vip": "⭐ Оформить VIP (250 Stars)",
-        "btn_templates": "💬 Текст продавцу",
-        "btn_finn": "Открыть на Finn.no ↗",
-        "invoice_title": "VIP Sniper (30 дней)",
-        "invoice_desc": "Моментальные персональные уведомления о находках!",
-        "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>"
-    },
-    "no": {
-        "menu": "🎯 <b>Finn Sniper Kontrollpanel</b>\n\nRadaren er aktiv 24/7. Trykk «Finn Radar» nedenfor for å konfigurere søkeord og byer.",
-        "btn_vip": "⭐ Aktiver VIP (250 Stars)",
-        "btn_templates": "💬 Melding til selger",
-        "btn_finn": "Se annonse på Finn.no ↗",
-        "invoice_title": "VIP Sniper (30 dager)",
-        "invoice_desc": "Motta lynraske varsler om de beste kuppene!",
-        "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>"
-    }
-}
+def extract_image(entry):
+    if "media_content" in entry and len(entry.media_content) > 0:
+        return entry.media_content[0].get("url", "")
+    if "enclosures" in entry and len(entry.enclosures) > 0:
+        return entry.enclosures[0].get("href", "")
+    summary = entry.get("summary", "")
+    match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', summary)
+    if match:
+        return match.group(1)
+    return ""
 
 async def analyze_with_gemini(title, desc, cat):
     if not gemini_client:
-        return "Gunstig funn registrert på Finn.no."
+        return "Gunstig kjøpsmulighet registrert på Finn.no."
     try:
         prompt = (
             f"Vurder dette funnet på Finn.no kort (maks 2 linjer):\n"
@@ -90,16 +93,21 @@ async def analyze_with_gemini(title, desc, cat):
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, region, is_vip) VALUES (?, 'no', 'ostfold', 0)", (user_id,))
+    cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, is_vip, settings_json) VALUES (?, 'no', 0, '{}')", (user_id,))
     conn.commit()
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⭐ VIP Sniper (250 Stars)", callback_data="buy_vip")]
     ])
-    await message.answer(TEXTS["no"]["menu"], parse_mode="HTML", reply_markup=kb)
+    await message.answer(
+        "🎯 <b>Finn Sniper Studio</b>\n\n"
+        "Радар активен 24/7. Откройте <b>«Finn Radar»</b> внизу для тонкой настройки фильтров, тегов и городов.",
+        parse_mode="HTML",
+        reply_markup=kb
+    )
 
 @dp.callback_query(F.data == "buy_vip")
-async def handle_buy_vip_callback(callback: types.CallbackQuery):
+async def handle_buy_vip(callback: types.CallbackQuery):
     prices = [LabeledPrice(label="VIP Sniper (30 dager)", amount=250)]
     await bot.send_invoice(
         chat_id=callback.message.chat.id,
@@ -113,8 +121,8 @@ async def handle_buy_vip_callback(callback: types.CallbackQuery):
     await callback.answer()
 
 @dp.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+async def process_pre_checkout_query(pre_checkout: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout.id, ok=True)
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
@@ -122,38 +130,6 @@ async def process_successful_payment(message: types.Message):
     cursor.execute("UPDATE users SET is_vip = 1 WHERE user_id = ?", (user_id,))
     conn.commit()
     await message.answer("🎉 <b>VIP-подписка активирована на 30 дней!</b>", parse_mode="HTML")
-
-@dp.message(Command("test"))
-async def handle_test(message: types.Message):
-    test_title = "Kemppi Minarc 150 Sveiseapparat (Sarpsborg)"
-    test_cat = "Verktøy"
-    test_ai = "🇳🇴 Legendarisk finsk sveisapparat til superpris i Østfold.\n🇷🇺 Надежный сварочный аппарат."
-    test_link = "https://www.finn.no"
-
-    cursor.execute(
-        "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
-        (f"test_{int(asyncio.get_event_loop().time())}", test_title, "Lite brukt sveiseapparat", test_ai, test_cat, test_link)
-    )
-    conn.commit()
-
-    if CHANNEL_ID:
-        try:
-            channel_kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]
-            ])
-            await bot.send_message(
-                chat_id=CHANNEL_ID,
-                text=(
-                    f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
-                    f"✨ <i>{test_ai}</i>\n\n"
-                    f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
-                ),
-                parse_mode="HTML",
-                reply_markup=channel_kb
-            )
-            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> тестовое сообщение отправлено!", parse_mode="HTML")
-        except Exception as e:
-            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}")
 
 async def monitor_finn():
     while True:
@@ -166,46 +142,35 @@ async def monitor_finn():
                     cursor.execute("SELECT 1 FROM seen_items WHERE item_id = ?", (item_id,))
                     if cursor.fetchone() is None:
                         title = html.unescape(entry.title)
-                        summary = html.unescape(entry.get("summary", ""))
+                        summary = html.unescape(re.sub('<[^<]+?>', '', entry.get("summary", "")))
+                        img_url = extract_image(entry)
                         ai_verdict = await analyze_with_gemini(title, summary, cat_name)
                         
                         cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
                         cursor.execute(
-                            "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
-                            (item_id, title, summary, ai_verdict, cat_name, item_id)
+                            "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (item_id, title, summary, ai_verdict, cat_name, item_id, img_url)
                         )
                         conn.commit()
 
-                        # 1. Постинг в канал
+                        # Публикация в канал
                         if CHANNEL_ID:
                             channel_text = (
                                 f"🏷️ <b>[{cat_name}]</b>\n"
                                 f"📌 <b>{title}</b>\n\n"
                                 f"✨ <i>{ai_verdict}</i>\n\n"
-                                f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
+                                f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Настроить радар под свой город</a>"
                             )
                             channel_kb = InlineKeyboardMarkup(inline_keyboard=[
                                 [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=item_id)]
                             ])
                             try:
-                                await bot.send_message(chat_id=CHANNEL_ID, text=channel_text, parse_mode="HTML", reply_markup=channel_kb)
+                                if img_url:
+                                    await bot.send_photo(chat_id=CHANNEL_ID, photo=img_url, caption=channel_text, parse_mode="HTML", reply_markup=channel_kb)
+                                else:
+                                    await bot.send_message(chat_id=CHANNEL_ID, text=channel_text, parse_mode="HTML", reply_markup=channel_kb)
                             except Exception as ce:
                                 logging.error(f"Channel error: {ce}")
-
-                        # 2. Рассылка пользователям
-                        cursor.execute("SELECT user_id FROM users")
-                        for (uid,) in cursor.fetchall():
-                            user_text = (
-                                f"🏷️ <b>[{cat_name}]</b>\n📌 <b>{title}</b>\n\n"
-                                f"✨ <b>Gemini AI:</b>\n{ai_verdict}\n"
-                            )
-                            user_kb = InlineKeyboardMarkup(inline_keyboard=[
-                                [InlineKeyboardButton(text="Se på Finn.no ↗", url=item_id)]
-                            ])
-                            try:
-                                await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
-                            except Exception as ue:
-                                logging.error(f"User error to {uid}: {ue}")
 
                 await asyncio.sleep(4)
         except Exception as e:
@@ -213,11 +178,12 @@ async def monitor_finn():
 
         await asyncio.sleep(20)
 
+# API
 async def handle_ping(request):
     return web.Response(text="Finn Sniper is online!")
 
-async def handle_get_items(request):
-    cursor.execute("SELECT title, summary, ai_verdict, cat, link FROM items_feed ORDER BY rowid DESC LIMIT 10")
+async def handle_get_feed(request):
+    cursor.execute("SELECT title, summary, ai_verdict, cat, link, image_url FROM items_feed ORDER BY rowid DESC LIMIT 15")
     rows = cursor.fetchall()
     items = []
     for r in rows:
@@ -226,18 +192,43 @@ async def handle_get_items(request):
             "summary": r[1],
             "ai_verdict": r[2],
             "cat": r[3],
-            "link": r[4]
+            "link": r[4],
+            "image_url": r[5]
         })
-    return web.json_response({"items": items}, headers={
+    return web.json_response({"items": items}, headers={"Access-Control-Allow-Origin": "*"})
+
+async def handle_get_user_state(request):
+    uid = request.query.get("user_id", "")
+    cursor.execute("SELECT is_vip, settings_json FROM users WHERE user_id = ?", (uid,))
+    row = cursor.fetchone()
+    if row:
+        return web.json_response({"is_vip": bool(row[0]), "settings": json.loads(row[1] or "{}")}, headers={"Access-Control-Allow-Origin": "*"})
+    return web.json_response({"is_vip": False, "settings": {}}, headers={"Access-Control-Allow-Origin": "*"})
+
+async def handle_save_user_state(request):
+    data = await request.json()
+    uid = data.get("user_id")
+    settings = json.dumps(data.get("settings", {}))
+    if uid:
+        cursor.execute("INSERT INTO users (user_id, settings_json) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET settings_json = ?", (uid, settings, settings))
+        conn.commit()
+    return web.json_response({"status": "ok"}, headers={"Access-Control-Allow-Origin": "*"})
+
+async def handle_cors_options(request):
+    return web.Response(headers={
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
     })
 
 async def start_web_server():
     app = web.Application()
+    app.router.add_route("OPTIONS", "/{tail:.*}", handle_cors_options)
     app.router.add_get("/", handle_ping)
-    app.router.add_get("/api/items", handle_get_items)
+    app.router.add_get("/api/feed", handle_get_feed)
+    app.router.add_get("/api/user_state", handle_get_user_state)
+    app.router.add_post("/api/save_state", handle_save_user_state)
+    
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.getenv("PORT", 10000))
