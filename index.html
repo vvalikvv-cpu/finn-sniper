@@ -12,13 +12,10 @@
             color: var(--tg-theme-text-color, #f8fafc);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-50%, 0, 0); }
+        .tab-btn.active {
+            color: #3b82f6;
+            border-top: 2px solid #3b82f6;
         }
-        .ticker-wrap { overflow: hidden; white-space: nowrap; }
-        .ticker-move { display: inline-flex; white-space: nowrap; animation: ticker 25s linear infinite; }
-        .ticker-move:hover, .ticker-move:active { animation-play-state: paused; }
         .chip-active {
             border-color: #3b82f6 !important;
             background-color: #1d4ed8 !important;
@@ -29,141 +26,136 @@
         .toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
-<body class="p-3.5 select-none pb-28">
+<body class="p-3.5 select-none pb-24">
 
-    <!-- 1. ШАПКА И ЯЗЫКИ -->
+    <!-- ВЕРХНИЙ БАР: ЛОГОТИП И ЯЗЫКИ -->
     <header class="flex justify-between items-center mb-3">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-xl font-black tracking-tight text-white">FINN SNIPER</h1>
-                <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
-                </span>
-            </div>
-            <p id="sub-title" class="text-[11px] text-slate-400">Konfigurer dine jaktprofiler</p>
+        <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+            <h1 class="text-xl font-black tracking-tight text-white">FINN SNIPER</h1>
+            <span id="header-vip-tag" class="text-[9px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded font-bold uppercase">
+                FREE
+            </span>
         </div>
         <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <button onclick="setLang('no')" id="btn-lang-no" class="px-1.5 py-0.5 rounded-lg text-xs font-bold bg-blue-600 text-white">🇳🇴</button>
-            <button onclick="setLang('en')" id="btn-lang-en" class="px-1.5 py-0.5 rounded-lg text-xs text-slate-400">🇬🇧</button>
-            <button onclick="setLang('ru')" id="btn-lang-ru" class="px-1.5 py-0.5 rounded-lg text-xs text-slate-400">🇷🇺</button>
-            <button onclick="setLang('ua')" id="btn-lang-ua" class="px-1.5 py-0.5 rounded-lg text-xs text-slate-400">🇺🇦</button>
-            <button onclick="setLang('pl')" id="btn-lang-pl" class="px-1.5 py-0.5 rounded-lg text-xs text-slate-400">🇵🇱</button>
+            <button onclick="setLang('no')" id="btn-lang-no" class="px-1.5 py-0.5 rounded text-xs font-bold bg-blue-600 text-white">🇳🇴</button>
+            <button onclick="setLang('ru')" id="btn-lang-ru" class="px-1.5 py-0.5 rounded text-xs text-slate-400">🇷🇺</button>
+            <button onclick="setLang('en')" id="btn-lang-en" class="px-1.5 py-0.5 rounded text-xs text-slate-400">🇬🇧</button>
         </div>
     </header>
 
-    <!-- 2. БЕГУЩАЯ СТРОКА -->
-    <div class="bg-slate-900/90 border border-blue-500/20 rounded-xl py-1.5 px-2 mb-3.5 flex items-center gap-2 shadow-inner">
-        <span class="text-[10px] font-black uppercase text-blue-400 flex items-center gap-1 shrink-0 bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800/60">
-            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> LIVE
-        </span>
-        <div class="ticker-wrap w-full">
-            <div id="ticker-content" class="ticker-move text-xs text-slate-300 font-medium space-x-6">
-                <span>🔥 [0 kr] Weber Grill (Sarpsborg)</span>
-                <span>⚡ [1 200 kr] Kemppi Minarc (Fredrikstad)</span>
-                <span>🎮 [4 200 kr] Sony PS5 Slim (Moss)</span>
-                <span>🛠️ [900 kr] Milwaukee M18 (Halden)</span>
+    <!-- ВКЛАДКА 1: ЖИВАЯ ЛЕНТА (RADAR FEED) -->
+    <main id="tab-feed" class="space-y-3">
+        <div class="flex justify-between items-center px-1">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Live Kupp-Radar</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
-        </div>
-    </div>
-
-    <!-- 3. ПРОФИЛИ ОХОТЫ (СОЗДАНИЕ, ВЫБОР, УДАЛЕНИЕ) -->
-    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-            <h2 id="prof-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">📁 Mine Jaktprofiler</h2>
-            <button onclick="openNewProfileModal()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-lg transition active:scale-95">
-                ➕ Ny Profil
+            <button onclick="loadFeed()" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                🔄 Oppdater
             </button>
         </div>
-        <div id="profiles-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <!-- Динамические профили -->
-        </div>
-    </section>
+        <div id="feed-container" class="space-y-3"></div>
+    </main>
 
-    <!-- 4. СНАЙПЕР-ТЕГИ (КЛЮЧЕВЫЕ СЛОВА) -->
-    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-            <h2 id="tags-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                <span>🎯</span> <span>Aktive Søkeord (Tags)</span>
-            </h2>
-            <span id="tags-count" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">0 aktive</span>
-        </div>
-        
-        <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
-
-        <div class="flex gap-1.5">
-            <input type="text" id="tag-input" placeholder="+ Legg til vare (f.eks. PS5 Pro, Kemppi, Makita)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
-            <button onclick="addTagFromInput()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
-                Legg til
-            </button>
-        </div>
-    </section>
-
-    <!-- 5. ЦЕНОВОЙ ДИАПАЗОН (PRICE FILTER) -->
-    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-            <h2 id="price-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">💰 Prisintervall (NOK)</h2>
-            <button onclick="setFreeOnly()" id="btn-free-toggle" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold">
-                🎁 Kun Gis bort (0 kr)
-            </button>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-[10px] text-slate-400 block mb-1">Fra pris (kr):</label>
-                <input type="number" id="price-min" placeholder="0" oninput="saveCurrentSettings()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-500">
+    <!-- ВКЛАДКА 2: СНАЙПЕР (НАСТРОЙКИ, ПРОФИЛИ, ТЕГИ) -->
+    <main id="tab-config" class="space-y-3 hidden">
+        <!-- Профили -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xs font-bold text-slate-300 uppercase">📁 Mine Jaktprofiler</h2>
+                <button onclick="openNewProfileModal()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded-lg">
+                    ➕ Ny Profil
+                </button>
             </div>
-            <div>
-                <label class="text-[10px] text-slate-400 block mb-1">Til pris (kr):</label>
-                <input type="number" id="price-max" placeholder="Maks (f.eks. 3500)" oninput="saveCurrentSettings()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-500">
+            <div id="profiles-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
+        </section>
+
+        <!-- Теги -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xs font-bold text-slate-300 uppercase">🎯 Søkeord (Tags)</h2>
+                <span id="tags-count" class="text-[10px] text-blue-400 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800/60">0 aktive</span>
             </div>
-        </div>
-    </section>
+            <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
+            <div class="flex gap-1.5">
+                <input type="text" id="tag-input" placeholder="+ Legg til (f.eks. Kemppi, Makita, PS5)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+                <button onclick="addTag()" class="px-3.5 py-2 bg-blue-600 font-bold text-xs rounded-xl text-white shrink-0">Legg til</button>
+            </div>
+        </section>
 
-    <!-- 6. РЕГИОНЫ И ГОРОДА (МУЛЬТИВЫБОР + ДОБАВЛЕНИЕ СВОИХ) -->
-    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-            <h2 id="reg-head" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">📍 Områder & Byer</h2>
-            <span id="reg-count" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">0 valgt</span>
-        </div>
-
-        <div id="regions-container" class="flex flex-wrap gap-1.5 mb-2.5">
-            <!-- Города Østfold и Норвегии -->
-        </div>
-
-        <!-- Добавление своего города/коммуны -->
-        <div class="flex gap-1.5">
-            <input type="text" id="custom-city-input" placeholder="+ Legg til din by/kommune..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
-            <button onclick="addCustomCity()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
-                + By
-            </button>
-        </div>
-    </section>
-
-    <!-- 7. ЖИВАЯ ЛЕНТА НАХОДОК -->
-    <section class="mb-4">
-        <div class="flex justify-between items-center mb-2">
-            <h2 id="feed-head" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Siste Live Funn på Finn.no</h2>
-            <button onclick="loadLiveFeed()" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
-                🔄 <span id="lbl-refresh">Oppdater</span>
-            </button>
-        </div>
-        <div id="live-cards-container" class="space-y-3"></div>
-    </section>
-
-    <!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПРОФИЛЯ -->
-    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm shadow-2xl">
-            <h3 class="text-sm font-bold text-white mb-2">💾 Lagre ny Jaktprofil</h3>
-            <p class="text-xs text-slate-400 mb-3">Nåværende søkeord, prisintervall og byer lagres i denne profilen.</p>
-            <input type="text" id="modal-prof-name" placeholder="Profilnavn (f.eks. Garasje Sarpsborg)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 mb-3 focus:outline-none focus:border-blue-500">
+        <!-- Цены -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xs font-bold text-slate-300 uppercase">💰 Prisintervall (NOK)</h2>
+                <button onclick="toggleFreeOnly()" id="btn-free-toggle" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold">
+                    🎁 Kun 0 kr (Gis bort)
+                </button>
+            </div>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="closeProfileModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Avbryt</button>
-                <button onclick="saveNewProfile()" class="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Lagre Profil</button>
+                <input type="number" id="price-min" placeholder="Fra kr" oninput="saveAndSync()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+                <input type="number" id="price-max" placeholder="Til kr (f.eks. 3500)" oninput="saveAndSync()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+            </div>
+        </section>
+
+        <!-- Города -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xs font-bold text-slate-300 uppercase">📍 Områder & Byer</h2>
+                <span id="cities-count" class="text-[10px] text-blue-400 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800/60">0 valgt</span>
+            </div>
+            <div id="cities-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
+            <div class="flex gap-1.5">
+                <input type="text" id="city-input" placeholder="+ Legg til by/kommune..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+                <button onclick="addCustomCity()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 text-white font-bold text-xs rounded-xl shrink-0">+ By</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ВКЛАДКА 3: VIP & ТАРИФЫ -->
+    <main id="tab-vip" class="space-y-4 hidden">
+        <div class="bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-slate-900 border border-amber-500/30 rounded-2xl p-4 text-center">
+            <span class="text-3xl mb-2 block">⭐</span>
+            <h2 class="text-base font-bold text-amber-300 mb-1">VIP Sniper Status</h2>
+            <p class="text-xs text-slate-300 mb-4">Motta lynraske varsler 5–15 sekunder før alle andre.</p>
+            <div class="text-left text-xs space-y-2 mb-4 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                <div class="flex items-center gap-2"><span>✅</span> <span>Ubegrenset antall søkeord (opptil 15)</span></div>
+                <div class="flex items-center gap-2"><span>✅</span> <span>Samtidig overvåking av 5+ byer</span></div>
+                <div class="flex items-center gap-2"><span>✅</span> <span>Maksimal prioritet i Telegram-kanalen</span></div>
+            </div>
+            <button onclick="buyVip()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
+                ⭐ Oppgrader for 250 Telegram Stars
+            </button>
+        </div>
+    </main>
+
+    <!-- НИЖНЯЯ НАВИГАЦИЯ (TABS) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center py-2 z-40">
+        <button onclick="switchTab('feed')" id="nav-feed" class="tab-btn active flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
+            <span class="text-base">📡</span> <span>Radar</span>
+        </button>
+        <button onclick="switchTab('config')" id="nav-config" class="tab-btn flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
+            <span class="text-base">🎯</span> <span>Søkeord</span>
+        </button>
+        <button onclick="switchTab('vip')" id="nav-vip" class="tab-btn flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
+            <span class="text-base">⭐</span> <span>VIP</span>
+        </button>
+    </nav>
+
+    <!-- МОДАЛКА НОВОГО ПРОФИЛЯ -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm">
+            <h3 class="text-sm font-bold text-white mb-2">💾 Ny Jaktprofil</h3>
+            <input type="text" id="modal-name" placeholder="Profilnavn (f.eks. Garasje Sarpsborg)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 mb-3">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="closeProfileModal()" class="py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Avbryt</button>
+                <button onclick="saveProfile()" class="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Lagre</button>
             </div>
         </div>
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="toast fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl pointer-events-none z-50">
+    <div id="toast" class="toast fixed bottom-16 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl z-50">
         Lagret! ✅
     </div>
 
@@ -172,37 +164,52 @@
         if (tg) { tg.expand(); tg.ready(); }
 
         const API_BASE = "https://finn-sniper-bot.onrender.com";
-        let currentLang = 'no';
+        const userId = tg?.initDataUnsafe?.user?.id || 'demo_user';
 
-        // Состояние приложения (State)
         let appState = {
-            activeProfileId: 'prof_1',
+            activeProfile: 'prof_1',
             tags: ['Kemppi Sveiseapparat', 'PlayStation 5'],
             priceMin: '',
             priceMax: '',
             isFreeOnly: false,
             cities: ['Sarpsborg', 'Fredrikstad'],
-            allCitiesList: ['Sarpsborg', 'Fredrikstad', 'Moss', 'Halden', 'Hvaler', 'Råde', 'Oslo', 'Drammen', 'Bergen', 'Trondheim', 'Stavanger'],
+            allCities: ['Sarpsborg', 'Fredrikstad', 'Moss', 'Halden', 'Hvaler', 'Råde', 'Oslo', 'Drammen', 'Bergen'],
             profiles: [
-                { id: 'prof_1', name: '🧰 Verktøy Østfold', tags: ['Kemppi', 'Makita 18V', 'Milwaukee'], priceMin: '', priceMax: '3000', cities: ['Sarpsborg', 'Fredrikstad', 'Halden'] },
-                { id: 'prof_2', name: '💻 Tech Resale', tags: ['PlayStation 5', 'iPhone 15', 'RTX 4080'], priceMin: '1000', priceMax: '6000', cities: ['Oslo', 'Sarpsborg', 'Moss'] },
-                { id: 'prof_3', name: '🎁 Gis bort Lokalt', tags: ['Weber Grill', 'Skinnsofa', 'Gressklipper'], priceMin: '0', priceMax: '0', cities: ['Sarpsborg', 'Fredrikstad'] }
+                { id: 'prof_1', name: '🧰 Verktøy Østfold', tags: ['Kemppi', 'Makita 18V'], priceMin: '', priceMax: '3000', cities: ['Sarpsborg', 'Fredrikstad'] },
+                { id: 'prof_2', name: '💻 Tech Resale', tags: ['PlayStation 5', 'iPhone 15'], priceMin: '1000', priceMax: '6000', cities: ['Oslo', 'Sarpsborg'] }
             ]
         };
 
-        // Загрузка сохраненного состояния
-        function loadSavedState() {
-            const local = localStorage.getItem('finn_sniper_state');
-            if (local) {
-                try { Object.assign(appState, JSON.parse(local)); } catch(e){}
-            }
+        async function init() {
+            try {
+                const res = await fetch(`${API_BASE}/api/user_state?user_id=${userId}`);
+                const data = await res.json();
+                if (data.settings && Object.keys(data.settings).length > 0) {
+                    Object.assign(appState, data.settings);
+                }
+            } catch(e){}
             renderAll();
+            loadFeed();
         }
 
-        function saveCurrentSettings() {
+        async function saveAndSync() {
             appState.priceMin = document.getElementById('price-min').value;
             appState.priceMax = document.getElementById('price-max').value;
-            localStorage.setItem('finn_sniper_state', JSON.stringify(appState));
+            try {
+                await fetch(`${API_BASE}/api/save_state`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, settings: appState })
+                });
+            } catch(e){}
+        }
+
+        function switchTab(tab) {
+            ['feed', 'config', 'vip'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+                document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+            });
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         }
 
         function renderAll() {
@@ -211,59 +218,48 @@
             renderCities();
             document.getElementById('price-min').value = appState.priceMin || '';
             document.getElementById('price-max').value = appState.priceMax || '';
-            updateFreeBtnStyle();
         }
 
-        // --- ПРОФИЛИ ---
         function renderProfiles() {
             const container = document.getElementById('profiles-list');
             container.innerHTML = '';
             appState.profiles.forEach(p => {
-                const isActive = p.id === appState.activeProfileId;
-                const btn = document.createElement('div');
-                btn.className = `shrink-0 p-2 rounded-xl text-xs flex items-center gap-2 border transition ${isActive ? 'bg-blue-600/30 border-blue-500 text-white font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-300'}`;
-                btn.innerHTML = `
-                    <span onclick="applyProfile('${p.id}')" class="cursor-pointer">${p.name}</span>
-                    <button onclick="deleteProfile('${p.id}')" class="text-slate-400 hover:text-red-400 font-bold ml-1">×</button>
+                const isActive = p.id === appState.activeProfile;
+                const div = document.createElement('div');
+                div.className = `shrink-0 p-2 rounded-xl text-xs flex items-center gap-1.5 border transition ${isActive ? 'bg-blue-600/30 border-blue-500 text-white font-bold' : 'bg-slate-800 border-slate-700 text-slate-300'}`;
+                div.innerHTML = `
+                    <span onclick="selectProfile('${p.id}')" class="cursor-pointer">${p.name}</span>
+                    <button onclick="deleteProfile('${p.id}')" class="text-slate-400 hover:text-red-400 ml-1">×</button>
                 `;
-                container.appendChild(btn);
+                container.appendChild(div);
             });
         }
 
-        function applyProfile(id) {
+        function selectProfile(id) {
             const p = appState.profiles.find(x => x.id === id);
             if (!p) return;
-            appState.activeProfileId = id;
+            appState.activeProfile = id;
             appState.tags = [...p.tags];
-            appState.priceMin = p.priceMin || '';
-            appState.priceMax = p.priceMax || '';
+            appState.priceMin = p.priceMin;
+            appState.priceMax = p.priceMax;
             appState.cities = [...p.cities];
-            saveCurrentSettings();
+            saveAndSync();
             renderAll();
-            showToast('Profil aktivert! 🎯');
+            showToast('Profil valgt! 🎯');
         }
 
         function deleteProfile(id) {
-            if (appState.profiles.length <= 1) {
-                alert('Du må ha minst én profil!');
-                return;
-            }
+            if (appState.profiles.length <= 1) return;
             appState.profiles = appState.profiles.filter(p => p.id !== id);
-            if (appState.activeProfileId === id) appState.activeProfileId = appState.profiles[0].id;
-            saveCurrentSettings();
+            if (appState.activeProfile === id) appState.activeProfile = appState.profiles[0].id;
+            saveAndSync();
             renderProfiles();
-            showToast('Profil slettet! 🗑️');
         }
 
-        function openNewProfileModal() {
-            document.getElementById('profile-modal').classList.remove('hidden');
-        }
-        function closeProfileModal() {
-            document.getElementById('profile-modal').classList.add('hidden');
-        }
-        function saveNewProfile() {
-            const nameInput = document.getElementById('modal-prof-name');
-            const name = nameInput.value.trim() || 'Min Profil';
+        function openNewProfileModal() { document.getElementById('profile-modal').classList.remove('hidden'); }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+        function saveProfile() {
+            const name = document.getElementById('modal-name').value.trim() || 'Min Profil';
             const newId = 'prof_' + Date.now();
             appState.profiles.push({
                 id: newId,
@@ -273,46 +269,43 @@
                 priceMax: document.getElementById('price-max').value,
                 cities: [...appState.cities]
             });
-            appState.activeProfileId = newId;
-            nameInput.value = '';
+            appState.activeProfile = newId;
             closeProfileModal();
-            saveCurrentSettings();
+            saveAndSync();
             renderProfiles();
             showToast('Ny profil lagret! 💾');
         }
 
-        // --- ТЕГИ ---
         function renderTags() {
             const container = document.getElementById('tags-container');
             container.innerHTML = '';
-            appState.tags.forEach((tag, idx) => {
+            appState.tags.forEach((t, i) => {
                 const span = document.createElement('span');
-                span.className = "bg-blue-950/70 border border-blue-800/80 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
-                span.innerHTML = `<span>${tag}</span><button onclick="removeTag(${idx})" class="text-slate-400 hover:text-red-400 font-bold">×</button>`;
+                span.className = "bg-blue-950 border border-blue-800 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
+                span.innerHTML = `<span>${t}</span><button onclick="removeTag(${i})" class="text-slate-400 hover:text-red-400">×</button>`;
                 container.appendChild(span);
             });
             document.getElementById('tags-count').innerText = `${appState.tags.length} aktive`;
         }
 
-        function addTagFromInput() {
-            const input = document.getElementById('tag-input');
-            const val = input.value.trim();
+        function addTag() {
+            const inp = document.getElementById('tag-input');
+            const val = inp.value.trim();
             if (!val) return;
             appState.tags.push(val);
-            input.value = '';
-            saveCurrentSettings();
+            inp.value = '';
+            saveAndSync();
             renderTags();
             showToast('Søkeord lagt til! 🎯');
         }
 
-        function removeTag(idx) {
-            appState.tags.splice(idx, 1);
-            saveCurrentSettings();
+        function removeTag(i) {
+            appState.tags.splice(i, 1);
+            saveAndSync();
             renderTags();
         }
 
-        // --- ЦЕНА ---
-        function setFreeOnly() {
+        function toggleFreeOnly() {
             appState.isFreeOnly = !appState.isFreeOnly;
             if (appState.isFreeOnly) {
                 document.getElementById('price-min').value = '0';
@@ -321,24 +314,13 @@
                 document.getElementById('price-min').value = '';
                 document.getElementById('price-max').value = '';
             }
-            saveCurrentSettings();
-            updateFreeBtnStyle();
+            saveAndSync();
         }
 
-        function updateFreeBtnStyle() {
-            const btn = document.getElementById('btn-free-toggle');
-            if (appState.isFreeOnly || (document.getElementById('price-min').value === '0' && document.getElementById('price-max').value === '0')) {
-                btn.className = "text-[10px] bg-emerald-600 border border-emerald-500 text-white px-2 py-0.5 rounded-lg font-bold";
-            } else {
-                btn.className = "text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold";
-            }
-        }
-
-        // --- РЕГИОНЫ / ГОРОДА ---
         function renderCities() {
-            const container = document.getElementById('regions-container');
+            const container = document.getElementById('cities-container');
             container.innerHTML = '';
-            appState.allCitiesList.forEach(city => {
+            appState.allCities.forEach(city => {
                 const isChecked = appState.cities.includes(city);
                 const chip = document.createElement('button');
                 chip.className = `p-2 rounded-xl text-xs border transition ${isChecked ? 'chip-active' : 'bg-slate-900 border-slate-800 text-slate-300'}`;
@@ -346,7 +328,7 @@
                 chip.onclick = () => toggleCity(city);
                 container.appendChild(chip);
             });
-            document.getElementById('reg-count').innerText = `${appState.cities.length} valgt`;
+            document.getElementById('cities-count').innerText = `${appState.cities.length} valgt`;
         }
 
         function toggleCity(city) {
@@ -355,70 +337,62 @@
             } else {
                 appState.cities.push(city);
             }
-            saveCurrentSettings();
+            saveAndSync();
             renderCities();
         }
 
         function addCustomCity() {
-            const input = document.getElementById('custom-city-input');
-            const val = input.value.trim();
+            const inp = document.getElementById('city-input');
+            const val = inp.value.trim();
             if (!val) return;
-            if (!appState.allCitiesList.includes(val)) {
-                appState.allCitiesList.push(val);
+            if (!appState.allCities.includes(val)) {
+                appState.allCities.push(val);
                 appState.cities.push(val);
             }
-            input.value = '';
-            saveCurrentSettings();
+            inp.value = '';
+            saveAndSync();
             renderCities();
             showToast(`Lagt til ${val}! 📍`);
         }
 
-        // --- ЖИВАЯ ЛЕНТА С КАРТОЧКАМИ ---
-        async function loadLiveFeed() {
-            const container = document.getElementById('live-cards-container');
+        async function loadFeed() {
+            const container = document.getElementById('feed-container');
             try {
-                const res = await fetch(`${API_BASE}/api/items`);
+                const res = await fetch(`${API_BASE}/api/feed`);
                 const data = await res.json();
                 if (data.items && data.items.length > 0) {
-                    renderCards(data.items);
+                    container.innerHTML = '';
+                    data.items.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl";
+                        card.innerHTML = `
+                            ${item.image_url ? `<img src="${item.image_url}" class="w-full h-40 object-cover border-b border-slate-800" onerror="this.style.display='none'">` : ''}
+                            <div class="p-3.5">
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">${item.cat}</span>
+                                    <span class="text-[10px] font-bold text-amber-300">🔥 Hot Deal</span>
+                                </div>
+                                <h3 class="font-bold text-sm text-white mb-1">${item.title}</h3>
+                                ${item.summary ? `<p class="text-xs text-slate-400 mb-2 line-clamp-2">${item.summary}</p>` : ''}
+                                <div class="p-2 bg-slate-950 rounded-xl border border-slate-800 text-xs mb-3 text-slate-300">
+                                    <span class="font-bold text-blue-400">✨ Gemini AI:</span> ${item.ai_verdict}
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="copyMsg('${item.title}')" class="py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700">💬 Melding</button>
+                                    <button onclick="openLink('${item.link}')" class="py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md">Se på Finn ↗</button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
                     return;
                 }
             } catch(e){}
-
-            // Запасная лента при холодном старте сервера
-            renderCards([
-                { title: "Kemppi Minarc 150 Sveiseapparat", cat: "Verktøy", summary: "Lite brukt sveiser med kabler og koffert. Sarpsborg.", ai_verdict: "Superkupp! Bruktverdi ~2 800 kr. Besparelse: ~1 600 kr.", link: "https://www.finn.no" },
-                { title: "Weber Spirit E-310 Gassgrill", cat: "Gis bort (0 kr)", summary: "Fungerer helt perfekt. Må hentes i kveld i Fredrikstad.", ai_verdict: "0 kr! Utmerket stand, etterspørsel er enorm.", link: "https://www.finn.no" }
-            ]);
+            container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500">Radaren skanner Finn.no... Nye kupp vises her straks! 📡</div>`;
         }
 
-        function renderCards(items) {
-            const container = document.getElementById('live-cards-container');
-            container.innerHTML = '';
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg";
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-1.5">
-                        <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md border border-blue-500/30">${item.cat}</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">🔥 Hot Deal</span>
-                    </div>
-                    <h3 class="font-bold text-sm text-white mb-1">${item.title}</h3>
-                    <p class="text-xs text-slate-400 mb-2">${item.summary || ''}</p>
-                    <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-xs mb-3 text-slate-300">
-                        <span class="font-bold text-blue-400">✨ Gemini AI:</span> ${item.ai_verdict}
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="copyFastMsg('${item.title}')" class="py-2 bg-slate-800 text-white text-xs font-semibold rounded-xl text-center border border-slate-700">💬 Melding</button>
-                        <button onclick="openLink('${item.link}')" class="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl text-center">Se på Finn ↗</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function copyFastMsg(title) {
-            const txt = `Hei! Jeg er veldig interessert i ${title} og kan hente i dag/kveld. Passer det? Mvh`;
+        function copyMsg(title) {
+            const txt = `Hei! Jeg er veldig interessert i "${title}" og kan hente raskt. Passer det i kveld? Mvh`;
             navigator.clipboard.writeText(txt).then(() => showToast('Melding kopiert! Lim inn på Finn.no ✅'));
         }
 
@@ -435,17 +409,17 @@
             else window.open(url, '_blank');
         }
 
+        function buyVip() {
+            if (tg) tg.close();
+        }
+
         function setLang(l) {
-            currentLang = l;
-            ['no', 'en', 'ru', 'ua', 'pl'].forEach(lang => {
-                const b = document.getElementById('btn-lang-' + lang);
-                b.className = (lang === l) ? "px-1.5 py-0.5 rounded-lg text-xs font-bold bg-blue-600 text-white" : "px-1.5 py-0.5 rounded-lg text-xs text-slate-400";
+            ['no', 'ru', 'en'].forEach(lang => {
+                document.getElementById(`btn-lang-${lang}`).className = (lang === l) ? "px-1.5 py-0.5 rounded text-xs font-bold bg-blue-600 text-white" : "px-1.5 py-0.5 rounded text-xs text-slate-400";
             });
         }
 
-        // Запуск
-        loadSavedState();
-        loadLiveFeed();
+        init();
     </script>
 </body>
 </html>
