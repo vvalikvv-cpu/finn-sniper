@@ -26,25 +26,35 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # База данных
 conn = sqlite3.connect("bot_data.db", check_same_thread=False)
 cursor = conn.cursor()
-cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, lang TEXT, region TEXT DEFAULT 'all', is_vip INTEGER DEFAULT 0)")
+cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, lang TEXT, region TEXT DEFAULT 'ostfold', is_vip INTEGER DEFAULT 0)")
 cursor.execute("CREATE TABLE IF NOT EXISTS seen_items (item_id TEXT PRIMARY KEY)")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS items_feed (
+        item_id TEXT PRIMARY KEY,
+        title TEXT,
+        summary TEXT,
+        ai_verdict TEXT,
+        cat TEXT,
+        link TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
 conn.commit()
 
-# Проверка и добавление колонки region при обновлении старой базы
 try:
-    cursor.execute("ALTER TABLE users ADD COLUMN region TEXT DEFAULT 'all'")
+    cursor.execute("ALTER TABLE users ADD COLUMN region TEXT DEFAULT 'ostfold'")
     conn.commit()
 except sqlite3.OperationalError:
     pass
 
-# Список регионов для фильтрации
+# Список регионов
 REGIONS = {
-    "all": {"ru": "🇳🇴 Вся Норвегия", "no": "🇳🇴 Hele Norge", "en": "🇳🇴 All Norway", "ua": "🇳🇴 Вся Норвегія", "pl": "🇳🇴 Cała Norwegia"},
+    "ostfold": {"ru": "🎯 Сарпсборг & Фредрикстад (Østfold)", "no": "🎯 Østfold (Sarpsborg/Fr.stad)", "en": "🎯 Østfold (Sarpsborg/Fr.stad)", "ua": "🎯 Сарпсборг & Фредрікстад", "pl": "🎯 Østfold (Sarpsborg/Fr.stad)"},
     "oslo": {"ru": "🏙️ Осло (Oslo)", "no": "🏙️ Oslo", "en": "🏙️ Oslo", "ua": "🏙️ Осло", "pl": "🏙️ Oslo"},
-    "viken": {"ru": "🌲 Викен / Акерсхус", "no": "🌲 Viken / Akershus", "en": "🌲 Viken / Akershus", "ua": "🌲 Вікен / Акерсгус", "pl": "🌲 Viken / Akershus"},
-    "vestland": {"ru": "⛰️ Берген (Vestland)", "no": "⛰️ Bergen (Vestland)", "en": "⛰️ Bergen (Vestland)", "ua": "⛰️ Берген", "pl": "⛰️ Bergen"},
-    "rogaland": {"ru": "⚓ Ставангер (Rogaland)", "no": "⚓ Stavanger (Rogaland)", "en": "⚓ Stavanger", "ua": "⚓ Ставангер", "pl": "⚓ Stavanger"},
-    "trondelag": {"ru": "❄️ Тронхейм (Trøndelag)", "no": "❄️ Trondheim", "en": "❄️ Trondheim", "ua": "❄️ Тронхейм", "pl": "❄️ Trondheim"}
+    "akershus": {"ru": "🌲 Акерсхус / Бэрум / Ски", "no": "🌲 Akershus / Bærum", "en": "🌲 Akershus / Bærum", "ua": "🌲 Акерсгус", "pl": "🌲 Akershus"},
+    "buskerud_vestfold": {"ru": "⚓ Драммен & Вестфолл", "no": "⚓ Drammen & Vestfold", "en": "⚓ Drammen & Vestfold", "ua": "⚓ Драммен & Вестфолл", "pl": "⚓ Drammen & Vestfold"},
+    "vestland": {"ru": "⛰️ Берген (Vestland)", "no": "⛰️ Bergen (Vestland)", "en": "⛰️ Bergen", "ua": "⛰️ Берген", "pl": "⛰️ Bergen"},
+    "all": {"ru": "🇳🇴 Вся Норвегия", "no": "🇳🇴 Hele Norge", "en": "🇳🇴 All Norway", "ua": "🇳🇴 Вся Норвегія", "pl": "🇳🇴 Cała Norwegia"}
 }
 
 # RSS-ленты Finn.no
@@ -129,7 +139,7 @@ TEXTS = {
                             "🚗 <b>Самовивіз сьогодні:</b>\n"
                             "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
                             "📦 <b>Відправка поштою:</b>\n"
-                            "<code>Hei! Натисніть для копіювання: Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
+                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
     },
     "pl": {
         "menu": "🎯 <b>Panel sterowania Finn Sniper</b>\n\nRadar jest aktywny 24/7.",
@@ -190,7 +200,7 @@ async def analyze_with_gemini(title, desc, cat):
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, region, is_vip) VALUES (?, 'no', 'all', 0)", (user_id,))
+    cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, region, is_vip) VALUES (?, 'no', 'ostfold', 0)", (user_id,))
     conn.commit()
 
     cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
@@ -268,10 +278,16 @@ async def handle_test(message: types.Message):
     lang = row[0] if row else "no"
     t = TEXTS.get(lang, TEXTS["no"])
 
-    test_title = "Makita DDF484 Bormaskin / Skrutrekker (Oslo)"
+    test_title = "Kemppi Minarc 150 Sveiseapparat (Sarpsborg)"
     test_cat = "Verktøy"
-    test_ai = "🇳🇴 Meget god profesjonell drill til topp pris.\n🇷🇺 Отличный профессиональный шуруповерт в Осло."
+    test_ai = "🇳🇴 Legendarisk finsk sveisapparat til superpris i Østfold.\n🇷🇺 Надежный профессиональный сварочный аппарат."
     test_link = "https://www.finn.no"
+
+    cursor.execute(
+        "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
+        (f"test_{int(asyncio.get_event_loop().time())}", test_title, "Lite brukt sveiseapparat", test_ai, test_cat, test_link)
+    )
+    conn.commit()
 
     item_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=t["btn_finn"], url=test_link)],
@@ -353,11 +369,11 @@ def is_item_matching_region(text_to_check: str, user_region: str) -> bool:
         return True
     
     keywords = {
+        "ostfold": ["østfold", "ostfold", "sarpsborg", "fredrikstad", "moss", "halden", "hvaler", "råde", "kråkerøy", "rolvsøy"],
         "oslo": ["oslo"],
-        "viken": ["viken", "akershus", "drammen", "lillestrøm", "asker", "bærum", "ski", "moss", "fredrikstad"],
-        "vestland": ["vestland", "bergen", "voss", "sogn", "fjordane"],
-        "rogaland": ["rogaland", "stavanger", "sandnes", "haugesund"],
-        "trondelag": ["trøndelag", "trondelag", "trondheim", "stjørdal", "steinkjer"]
+        "akershus": ["akershus", "viken", "bærum", "asker", "lillestrøm", "ski", "lillestrom", "oppegård"],
+        "buskerud_vestfold": ["buskerud", "vestfold", "drammen", "tønsberg", "sandefjord", "larvik", "horten"],
+        "vestland": ["vestland", "bergen", "voss", "sogn"]
     }
     target_words = keywords.get(user_region, [])
     lowered = text_to_check.lower()
@@ -378,9 +394,12 @@ async def monitor_finn():
                         ai_verdict = await analyze_with_gemini(title, summary, cat_name)
                         
                         cursor.execute("INSERT INTO seen_items (item_id) VALUES (?)", (item_id,))
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
+                            (item_id, title, summary, ai_verdict, cat_name, item_id)
+                        )
                         conn.commit()
 
-                        # 1. Постинг в открытый канал
                         if CHANNEL_ID:
                             channel_text = (
                                 f"🏷️ <b>[{cat_name}]</b>\n"
@@ -396,7 +415,6 @@ async def monitor_finn():
                             except Exception as ce:
                                 logging.error(f"Channel send error: {ce}")
 
-                        # 2. Отправка пользователям с учетом выбранного региона
                         combined_item_text = f"{title} {summary}"
                         cursor.execute("SELECT user_id, lang, region FROM users")
                         users = cursor.fetchall()
@@ -423,12 +441,32 @@ async def monitor_finn():
 
         await asyncio.sleep(20)
 
+# API Эндпоинты для веб-приложения Mini App
 async def handle_ping(request):
     return web.Response(text="Finn Sniper is online!")
+
+async def handle_get_items(request):
+    cursor.execute("SELECT title, summary, ai_verdict, cat, link FROM items_feed ORDER BY rowid DESC LIMIT 10")
+    rows = cursor.fetchall()
+    items = []
+    for r in rows:
+        items.append({
+            "title": r[0],
+            "summary": r[1],
+            "ai_verdict": r[2],
+            "cat": r[3],
+            "link": r[4]
+        })
+    return web.json_response({"items": items}, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    })
 
 async def start_web_server():
     app = web.Application()
     app.router.add_get("/", handle_ping)
+    app.router.add_get("/api/items", handle_get_items)
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.getenv("PORT", 10000))
