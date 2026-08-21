@@ -47,7 +47,6 @@ cursor.execute("""
         cat TEXT,
         link TEXT,
         image_url TEXT,
-        price TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
@@ -73,7 +72,7 @@ def extract_image(entry):
 
 async def analyze_with_gemini(title, desc, cat):
     if not gemini_client:
-        return "Gunstig kjøpsmulighet registrert på Finn.no."
+        return "Gunstig funn registrert i sanntid."
     try:
         prompt = (
             f"Vurder dette funnet på Finn.no kort (maks 2 linjer):\n"
@@ -88,7 +87,7 @@ async def analyze_with_gemini(title, desc, cat):
         return res.text.strip()
     except Exception as e:
         logging.error(f"Gemini error: {e}")
-        return "Attraktivt funn i sanntid."
+        return "Attraktivt funn registrert."
 
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
@@ -100,8 +99,8 @@ async def handle_start(message: types.Message):
         [InlineKeyboardButton(text="⭐ VIP Sniper (250 Stars)", callback_data="buy_vip")]
     ])
     await message.answer(
-        "🎯 <b>Finn Sniper Studio</b>\n\n"
-        "Радар активен 24/7. Откройте <b>«Finn Radar»</b> внизу для тонкой настройки фильтров, тегов и городов.",
+        "🎯 <b>Finn Sniper Studio 2.0</b>\n\n"
+        "Радар активен 24/7. Нажмите на кнопку <b>«Finn Radar»</b> внизу для входа в студию управления профилями, радиусом и тегами!",
         parse_mode="HTML",
         reply_markup=kb
     )
@@ -121,8 +120,8 @@ async def handle_buy_vip(callback: types.CallbackQuery):
     await callback.answer()
 
 @dp.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout.id, ok=True)
+async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
@@ -178,7 +177,7 @@ async def monitor_finn():
 
         await asyncio.sleep(20)
 
-# API
+# API Эндпоинты
 async def handle_ping(request):
     return web.Response(text="Finn Sniper is online!")
 
