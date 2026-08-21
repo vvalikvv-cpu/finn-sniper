@@ -41,23 +41,6 @@ cursor.execute("""
 """)
 conn.commit()
 
-try:
-    cursor.execute("ALTER TABLE users ADD COLUMN region TEXT DEFAULT 'ostfold'")
-    conn.commit()
-except sqlite3.OperationalError:
-    pass
-
-# Список регионов
-REGIONS = {
-    "ostfold": {"ru": "🎯 Сарпсборг & Фредрикстад (Østfold)", "no": "🎯 Østfold (Sarpsborg/Fr.stad)", "en": "🎯 Østfold (Sarpsborg/Fr.stad)", "ua": "🎯 Сарпсборг & Фредрікстад", "pl": "🎯 Østfold (Sarpsborg/Fr.stad)"},
-    "oslo": {"ru": "🏙️ Осло (Oslo)", "no": "🏙️ Oslo", "en": "🏙️ Oslo", "ua": "🏙️ Осло", "pl": "🏙️ Oslo"},
-    "akershus": {"ru": "🌲 Акерсхус / Бэрум / Ски", "no": "🌲 Akershus / Bærum", "en": "🌲 Akershus / Bærum", "ua": "🌲 Акерсгус", "pl": "🌲 Akershus"},
-    "buskerud_vestfold": {"ru": "⚓ Драммен & Вестфолл", "no": "⚓ Drammen & Vestfold", "en": "⚓ Drammen & Vestfold", "ua": "⚓ Драммен & Вестфолл", "pl": "⚓ Drammen & Vestfold"},
-    "vestland": {"ru": "⛰️ Берген (Vestland)", "no": "⛰️ Bergen (Vestland)", "en": "⛰️ Bergen", "ua": "⛰️ Берген", "pl": "⛰️ Bergen"},
-    "all": {"ru": "🇳🇴 Вся Норвегия", "no": "🇳🇴 Hele Norge", "en": "🇳🇴 All Norway", "ua": "🇳🇴 Вся Норвегія", "pl": "🇳🇴 Cała Norwegia"}
-}
-
-# RSS-ленты Finn.no
 FEEDS = {
     "Gis bort (0 kr)": "https://www.finn.no/bap/forsale/search.rss?price_to=0&trade_type=2&sort=PUBLISHED_DESC",
     "Tech & Apple": "https://www.finn.no/bap/forsale/search.rss?category=0.93&sub_category=1.93.3215&sort=PUBLISHED_DESC",
@@ -66,121 +49,28 @@ FEEDS = {
 
 TEXTS = {
     "ru": {
-        "menu": "🎯 <b>Панель управления Finn Sniper</b>\n\nРадар активен 24/7. Лоты приходят сразу после публикации на Finn.no.",
+        "menu": "🎯 <b>Панель управления Finn Sniper</b>\n\nРадар активен 24/7. Нажмите «Finn Radar» внизу для настройки профилей, тегов и городов.",
         "btn_vip": "⭐ Оформить VIP (250 Stars)",
-        "btn_lang": "🌐 Сменить язык",
-        "btn_region": "📍 Выбрать регион",
-        "btn_finn": "Открыть на Finn.no ↗",
         "btn_templates": "💬 Текст продавцу",
-        "region_title": "📍 <b>Выберите ваш регион в Норвегии:</b>\n\n(Бот будет присылать находки только из выбранной области)",
-        "region_saved": "✅ Регион успешно установлен:",
+        "btn_finn": "Открыть на Finn.no ↗",
         "invoice_title": "VIP Sniper (30 дней)",
         "invoice_desc": "Моментальные персональные уведомления о находках!",
-        "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>",
-        "templates_header": "📋 <b>Быстрые шаблоны на норвежском (нажмите, чтобы скопировать):</b>\n\n"
-                            "🚗 <b>Быстрый самовывоз сегодня:</b>\n"
-                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
-                            "💰 <b>Торг / предложение цены:</b>\n"
-                            "<code>Hei! Er varen fortsatt tilgjengelig? Kan hente raskt mot en smidig handel. Mvh</code>\n\n"
-                            "📦 <b>Отправка почтой / Fiks ferdig:</b>\n"
-                            "<code>Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh</code>"
+        "success_pay": "🎉 <b>VIP-подписка активирована на 30 дней!</b>"
     },
     "no": {
-        "menu": "🎯 <b>Finn Sniper Kontrollpanel</b>\n\nRadaren er aktiv 24/7. Nye kupp sendes umiddelbart.",
+        "menu": "🎯 <b>Finn Sniper Kontrollpanel</b>\n\nRadaren er aktiv 24/7. Trykk «Finn Radar» nedenfor for å konfigurere søkeord og byer.",
         "btn_vip": "⭐ Aktiver VIP (250 Stars)",
-        "btn_lang": "🌐 Endre språk",
-        "btn_region": "📍 Velg region",
-        "btn_finn": "Se annonse på Finn.no ↗",
         "btn_templates": "💬 Melding til selger",
-        "region_title": "📍 <b>Velg din region i Norge:</b>\n\n(Radaren vil kun varsle om kupp i dette området)",
-        "region_saved": "✅ Region er oppdatert:",
+        "btn_finn": "Se annonse på Finn.no ↗",
         "invoice_title": "VIP Sniper (30 dager)",
         "invoice_desc": "Motta lynraske varsler om de beste kuppene!",
-        "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>",
-        "templates_header": "📋 <b>Hurtigmaler (trykk for å kopiere):</b>\n\n"
-                            "🚗 <b>Hente i dag:</b>\n"
-                            "<code>Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh</code>\n\n"
-                            "💰 <b>Rask handel:</b>\n"
-                            "<code>Hei! Er varen fortsatt tilgjengelig? Kan hente raskt. Mvh</code>\n\n"
-                            "📦 <b>Fiks ferdig:</b>\n"
-                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
-    },
-    "en": {
-        "menu": "🎯 <b>Finn Sniper Control Panel</b>\n\nRadar active 24/7. New deals sent instantly.",
-        "btn_vip": "⭐ Get VIP (250 Stars)",
-        "btn_lang": "🌐 Change Language",
-        "btn_region": "📍 Select Region",
-        "btn_finn": "Open on Finn.no ↗",
-        "btn_templates": "💬 Message Templates",
-        "region_title": "📍 <b>Select your region in Norway:</b>",
-        "region_saved": "✅ Region set to:",
-        "invoice_title": "VIP Sniper (30 days)",
-        "invoice_desc": "Fastest deal alerts directly to your PM!",
-        "success_pay": "🎉 <b>VIP activated for 30 days!</b>",
-        "templates_header": "📋 <b>Quick Norwegian templates (tap to copy):</b>\n\n"
-                            "🚗 <b>Pickup today:</b>\n"
-                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
-                            "📦 <b>Shipping:</b>\n"
-                            "<code>Hei! Har du mulighet til å sende denne via Fiks ferdig / Posten? Mvh</code>"
-    },
-    "ua": {
-        "menu": "🎯 <b>Панель управління Finn Sniper</b>\n\nРадар активний 24/7. Знахідки надходять миттєво.",
-        "btn_vip": "⭐ Оформити VIP (250 Stars)",
-        "btn_lang": "🌐 Змінити мову",
-        "btn_region": "📍 Обрати регіон",
-        "btn_finn": "Відкрити на Finn.no ↗",
-        "btn_templates": "💬 Текст для продавця",
-        "region_title": "📍 <b>Оберіть ваш регіон у Норвегії:</b>",
-        "region_saved": "✅ Регіон оновлено:",
-        "invoice_title": "VIP Sniper (30 днів)",
-        "invoice_desc": "Миттєві сповіщення про найкращі пропозиції!",
-        "success_pay": "🎉 <b>VIP активовано на 30 днів!</b>",
-        "templates_header": "📋 <b>Швидкі шаблони норвезькою (натисніть, щоб скопіювати):</b>\n\n"
-                            "🚗 <b>Самовивіз сьогодні:</b>\n"
-                            "<code>Hei! Jeg er veldig interessert og kan hente i dag/kveld hvis det passer for deg. Mvh</code>\n\n"
-                            "📦 <b>Відправка поштою:</b>\n"
-                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
-    },
-    "pl": {
-        "menu": "🎯 <b>Panel sterowania Finn Sniper</b>\n\nRadar jest aktywny 24/7.",
-        "btn_vip": "⭐ Aktywuj VIP (250 Stars)",
-        "btn_lang": "🌐 Zmień język",
-        "btn_region": "📍 Wybierz region",
-        "btn_finn": "Zobacz na Finn.no ↗",
-        "btn_templates": "💬 Szablon wiadomości",
-        "region_title": "📍 <b>Wybierz swój region w Norwegii:</b>",
-        "region_saved": "✅ Zaktualizowano region:",
-        "invoice_title": "VIP Sniper (30 dni)",
-        "invoice_desc": "Błyskawiczne powiadomienia o okazjach!",
-        "success_pay": "🎉 <b>VIP aktywowany na 30 dni!</b>",
-        "templates_header": "📋 <b>Gotowe szablony po norwesku (kliknij, aby skopiować):</b>\n\n"
-                            "🚗 <b>Odbiór dzisiaj:</b>\n"
-                            "<code>Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh</code>\n\n"
-                            "📦 <b>Wysyłka:</b>\n"
-                            "<code>Hei! Har du mulighet til å sende via Fiks ferdig? Mvh</code>"
+        "success_pay": "🎉 <b>VIP er aktivert i 30 dager!</b>"
     }
 }
 
-def get_main_keyboard(lang):
-    t = TEXTS.get(lang, TEXTS["no"])
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=t["btn_vip"], callback_data="buy_vip")],
-        [
-            InlineKeyboardButton(text=t["btn_region"], callback_data="open_region_menu"),
-            InlineKeyboardButton(text=t["btn_lang"], callback_data="open_lang_menu")
-        ]
-    ])
-
-def get_region_keyboard(lang):
-    keyboard = []
-    for reg_key, reg_names in REGIONS.items():
-        name = reg_names.get(lang, reg_names["no"])
-        keyboard.append([InlineKeyboardButton(text=name, callback_data=f"setreg_{reg_key}")])
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
 async def analyze_with_gemini(title, desc, cat):
     if not gemini_client:
-        return "AI analyse utilgjengelig."
+        return "Gunstig funn registrert på Finn.no."
     try:
         prompt = (
             f"Vurder dette funnet på Finn.no kort (maks 2 linjer):\n"
@@ -195,7 +85,7 @@ async def analyze_with_gemini(title, desc, cat):
         return res.text.strip()
     except Exception as e:
         logging.error(f"Gemini error: {e}")
-        return "Attraktivt funn registrert."
+        return "Attraktivt funn i sanntid."
 
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
@@ -203,150 +93,24 @@ async def handle_start(message: types.Message):
     cursor.execute("INSERT OR IGNORE INTO users (user_id, lang, region, is_vip) VALUES (?, 'no', 'ostfold', 0)", (user_id,))
     conn.commit()
 
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-
-    await message.answer(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
-
-@dp.callback_query(F.data == "open_lang_menu")
-async def show_languages(callback: types.CallbackQuery):
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🇳🇴 Norsk", callback_data="lang_no"),
-            InlineKeyboardButton(text="🇬🇧 English", callback_data="lang_en")
-        ],
-        [
-            InlineKeyboardButton(text="🇺🇦 Українська", callback_data="lang_ua"),
-            InlineKeyboardButton(text="🇵🇱 Polski", callback_data="lang_pl")
-        ],
-        [
-            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang_ru")
-        ]
+        [InlineKeyboardButton(text="⭐ VIP Sniper (250 Stars)", callback_data="buy_vip")]
     ])
-    await callback.message.edit_text("Velg språk / Choose language / Выберите язык:", reply_markup=kb)
-    await callback.answer()
+    await message.answer(TEXTS["no"]["menu"], parse_mode="HTML", reply_markup=kb)
 
-@dp.callback_query(lambda c: c.data.startswith("lang_"))
-async def set_language(callback: types.CallbackQuery):
-    lang = callback.data.split("_")[1]
-    cursor.execute("UPDATE users SET lang = ? WHERE user_id = ?", (lang, callback.from_user.id))
-    conn.commit()
-    t = TEXTS.get(lang, TEXTS["no"])
-    await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
-    await callback.answer()
-
-@dp.callback_query(F.data == "open_region_menu")
-async def show_regions(callback: types.CallbackQuery):
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (callback.from_user.id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-    await callback.message.edit_text(t["region_title"], parse_mode="HTML", reply_markup=get_region_keyboard(lang))
-    await callback.answer()
-
-@dp.callback_query(lambda c: c.data.startswith("setreg_"))
-async def set_region(callback: types.CallbackQuery):
-    region_code = callback.data.split("_")[1]
-    cursor.execute("UPDATE users SET region = ? WHERE user_id = ?", (region_code, callback.from_user.id))
-    conn.commit()
-    
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (callback.from_user.id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-    reg_name = REGIONS.get(region_code, {}).get(lang, region_code)
-
-    await callback.message.answer(f"{t['region_saved']} <b>{reg_name}</b>", parse_mode="HTML")
-    await callback.message.edit_text(t["menu"], parse_mode="HTML", reply_markup=get_main_keyboard(lang))
-    await callback.answer()
-
-@dp.callback_query(F.data == "show_templates")
-async def handle_show_templates(callback: types.CallbackQuery):
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (callback.from_user.id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-    await callback.message.answer(t["templates_header"], parse_mode="HTML")
-    await callback.answer()
-
-@dp.message(Command("test"))
-async def handle_test(message: types.Message):
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (message.from_user.id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-
-    test_title = "Kemppi Minarc 150 Sveiseapparat (Sarpsborg)"
-    test_cat = "Verktøy"
-    test_ai = "🇳🇴 Legendarisk finsk sveisapparat til superpris i Østfold.\n🇷🇺 Надежный профессиональный сварочный аппарат."
-    test_link = "https://www.finn.no"
-
-    cursor.execute(
-        "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
-        (f"test_{int(asyncio.get_event_loop().time())}", test_title, "Lite brukt sveiseapparat", test_ai, test_cat, test_link)
-    )
-    conn.commit()
-
-    item_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=t["btn_finn"], url=test_link)],
-        [InlineKeyboardButton(text=t["btn_templates"], callback_data="show_templates")]
-    ])
-
-    await message.answer(
-        f"🧪 <b>[ТЕСТОВОЕ ОПОВЕЩЕНИЕ В ЧАТ]</b>\n"
-        f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
-        f"✨ <b>Gemini AI:</b>\n{test_ai}",
-        parse_mode="HTML",
-        reply_markup=item_kb
-    )
-
-    if CHANNEL_ID:
-        try:
-            channel_kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]
-            ])
-            await bot.send_message(
-                chat_id=CHANNEL_ID,
-                text=(
-                    f"🧪 <b>[ТЕСТ В КАНАЛ]</b>\n"
-                    f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
-                    f"✨ <i>{test_ai}</i>\n\n"
-                    f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
-                ),
-                parse_mode="HTML",
-                reply_markup=channel_kb
-            )
-            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> тестовое сообщение отправлено!", parse_mode="HTML")
-        except Exception as e:
-            await message.answer(f"❌ Ошибка в канале {CHANNEL_ID}: {e}")
-
-async def send_invoice_logic(chat_id, user_id):
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-
+@dp.callback_query(F.data == "buy_vip")
+async def handle_buy_vip_callback(callback: types.CallbackQuery):
     prices = [LabeledPrice(label="VIP Sniper (30 dager)", amount=250)]
     await bot.send_invoice(
-        chat_id=chat_id,
-        title=t["invoice_title"],
-        description=t["invoice_desc"],
-        payload=f"vip_sub_{user_id}",
+        chat_id=callback.message.chat.id,
+        title="VIP Sniper (30 dager)",
+        description="Motta lynraske varsler om de beste kuppene!",
+        payload=f"vip_sub_{callback.from_user.id}",
         currency="XTR",
         prices=prices,
         provider_token=""
     )
-
-@dp.callback_query(F.data == "buy_vip")
-async def handle_buy_vip_callback(callback: types.CallbackQuery):
-    await send_invoice_logic(callback.message.chat.id, callback.from_user.id)
     await callback.answer()
-
-@dp.message(Command("vip"))
-async def handle_buy_vip_command(message: types.Message):
-    await send_invoice_logic(message.chat.id, message.from_user.id)
 
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
@@ -357,27 +121,39 @@ async def process_successful_payment(message: types.Message):
     user_id = message.from_user.id
     cursor.execute("UPDATE users SET is_vip = 1 WHERE user_id = ?", (user_id,))
     conn.commit()
-    
-    cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    lang = row[0] if row else "no"
-    t = TEXTS.get(lang, TEXTS["no"])
-    await message.answer(t["success_pay"], parse_mode="HTML")
+    await message.answer("🎉 <b>VIP-подписка активирована на 30 дней!</b>", parse_mode="HTML")
 
-def is_item_matching_region(text_to_check: str, user_region: str) -> bool:
-    if not user_region or user_region == "all":
-        return True
-    
-    keywords = {
-        "ostfold": ["østfold", "ostfold", "sarpsborg", "fredrikstad", "moss", "halden", "hvaler", "råde", "kråkerøy", "rolvsøy"],
-        "oslo": ["oslo"],
-        "akershus": ["akershus", "viken", "bærum", "asker", "lillestrøm", "ski", "lillestrom", "oppegård"],
-        "buskerud_vestfold": ["buskerud", "vestfold", "drammen", "tønsberg", "sandefjord", "larvik", "horten"],
-        "vestland": ["vestland", "bergen", "voss", "sogn"]
-    }
-    target_words = keywords.get(user_region, [])
-    lowered = text_to_check.lower()
-    return any(w in lowered for w in target_words)
+@dp.message(Command("test"))
+async def handle_test(message: types.Message):
+    test_title = "Kemppi Minarc 150 Sveiseapparat (Sarpsborg)"
+    test_cat = "Verktøy"
+    test_ai = "🇳🇴 Legendarisk finsk sveisapparat til superpris i Østfold.\n🇷🇺 Надежный сварочный аппарат."
+    test_link = "https://www.finn.no"
+
+    cursor.execute(
+        "INSERT OR REPLACE INTO items_feed (item_id, title, summary, ai_verdict, cat, link) VALUES (?, ?, ?, ?, ?, ?)",
+        (f"test_{int(asyncio.get_event_loop().time())}", test_title, "Lite brukt sveiseapparat", test_ai, test_cat, test_link)
+    )
+    conn.commit()
+
+    if CHANNEL_ID:
+        try:
+            channel_kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Se annonse på Finn.no ↗", url=test_link)]
+            ])
+            await bot.send_message(
+                chat_id=CHANNEL_ID,
+                text=(
+                    f"🏷️ <b>[{test_cat}]</b>\n📌 <b>{test_title}</b>\n\n"
+                    f"✨ <i>{test_ai}</i>\n\n"
+                    f"⚡ <a href='https://t.me/{BOT_USERNAME}'>Включить радар в боте</a>"
+                ),
+                parse_mode="HTML",
+                reply_markup=channel_kb
+            )
+            await message.answer(f"✅ В канал <b>{CHANNEL_ID}</b> тестовое сообщение отправлено!", parse_mode="HTML")
+        except Exception as e:
+            await message.answer(f"❌ Ошибка отправки в канал {CHANNEL_ID}: {e}")
 
 async def monitor_finn():
     while True:
@@ -385,7 +161,7 @@ async def monitor_finn():
             for cat_name, rss_url in FEEDS.items():
                 feed = await asyncio.to_thread(feedparser.parse, rss_url, agent=USER_AGENT)
                 
-                for entry in reversed(feed.entries[:3]):
+                for entry in reversed(feed.entries[:4]):
                     item_id = entry.link
                     cursor.execute("SELECT 1 FROM seen_items WHERE item_id = ?", (item_id,))
                     if cursor.fetchone() is None:
@@ -400,6 +176,7 @@ async def monitor_finn():
                         )
                         conn.commit()
 
+                        # 1. Постинг в канал
                         if CHANNEL_ID:
                             channel_text = (
                                 f"🏷️ <b>[{cat_name}]</b>\n"
@@ -413,35 +190,29 @@ async def monitor_finn():
                             try:
                                 await bot.send_message(chat_id=CHANNEL_ID, text=channel_text, parse_mode="HTML", reply_markup=channel_kb)
                             except Exception as ce:
-                                logging.error(f"Channel send error: {ce}")
+                                logging.error(f"Channel error: {ce}")
 
-                        combined_item_text = f"{title} {summary}"
-                        cursor.execute("SELECT user_id, lang, region FROM users")
-                        users = cursor.fetchall()
-                        for uid, lang, region in users:
-                            if is_item_matching_region(combined_item_text, region):
-                                t = TEXTS.get(lang, TEXTS["no"])
-                                user_text = (
-                                    f"🏷️ <b>[{cat_name}]</b>\n"
-                                    f"📌 <b>{title}</b>\n\n"
-                                    f"✨ <b>Gemini AI:</b>\n{ai_verdict}\n"
-                                )
-                                user_kb = InlineKeyboardMarkup(inline_keyboard=[
-                                    [InlineKeyboardButton(text=t["btn_finn"], url=item_id)],
-                                    [InlineKeyboardButton(text=t["btn_templates"], callback_data="show_templates")]
-                                ])
-                                try:
-                                    await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
-                                except Exception as ue:
-                                    logging.error(f"User send error to {uid}: {ue}")
+                        # 2. Рассылка пользователям
+                        cursor.execute("SELECT user_id FROM users")
+                        for (uid,) in cursor.fetchall():
+                            user_text = (
+                                f"🏷️ <b>[{cat_name}]</b>\n📌 <b>{title}</b>\n\n"
+                                f"✨ <b>Gemini AI:</b>\n{ai_verdict}\n"
+                            )
+                            user_kb = InlineKeyboardMarkup(inline_keyboard=[
+                                [InlineKeyboardButton(text="Se på Finn.no ↗", url=item_id)]
+                            ])
+                            try:
+                                await bot.send_message(chat_id=uid, text=user_text, parse_mode="HTML", reply_markup=user_kb)
+                            except Exception as ue:
+                                logging.error(f"User error to {uid}: {ue}")
 
                 await asyncio.sleep(4)
         except Exception as e:
-            logging.error(f"Monitor loop error: {e}")
+            logging.error(f"Monitor error: {e}")
 
         await asyncio.sleep(20)
 
-# API Эндпоинты для веб-приложения Mini App
 async def handle_ping(request):
     return web.Response(text="Finn Sniper is online!")
 
