@@ -12,150 +12,234 @@
             color: var(--tg-theme-text-color, #f8fafc);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .tab-btn.active {
-            color: #3b82f6;
-            border-top: 2px solid #3b82f6;
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
         }
-        .chip-active {
-            border-color: #3b82f6 !important;
-            background-color: #1d4ed8 !important;
-            color: #ffffff !important;
-            font-weight: 700;
-        }
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker-move { display: inline-flex; white-space: nowrap; animation: ticker 22s linear infinite; }
+        .ticker-move:hover, .ticker-move:active { animation-play-state: paused; }
+        .tab-active { color: #3b82f6 !important; border-top: 2px solid #3b82f6 !important; }
+        .chip-selected { background-color: #1d4ed8 !important; border-color: #3b82f6 !important; color: #ffffff !important; font-weight: 700; }
         .toast { visibility: hidden; opacity: 0; transition: opacity 0.3s, visibility 0.3s; }
         .toast.show { visibility: visible; opacity: 1; }
+        input[type=range] { accent-color: #3b82f6; }
     </style>
 </head>
 <body class="p-3.5 select-none pb-24">
 
-    <!-- ВЕРХНИЙ БАР: ЛОГОТИП И ЯЗЫКИ -->
+    <!-- ВЕРХНИЙ БАР (ШАПКА) -->
     <header class="flex justify-between items-center mb-3">
         <div class="flex items-center gap-2">
             <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
-            <h1 class="text-xl font-black tracking-tight text-white">FINN SNIPER</h1>
-            <span id="header-vip-tag" class="text-[9px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded font-bold uppercase">
+            <h1 class="text-lg font-black tracking-tight text-white">FINN SNIPER</h1>
+            <span id="vip-status-tag" class="text-[9px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded font-bold uppercase">
                 FREE
             </span>
         </div>
-        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <button onclick="setLang('no')" id="btn-lang-no" class="px-1.5 py-0.5 rounded text-xs font-bold bg-blue-600 text-white">🇳🇴</button>
-            <button onclick="setLang('ru')" id="btn-lang-ru" class="px-1.5 py-0.5 rounded text-xs text-slate-400">🇷🇺</button>
-            <button onclick="setLang('en')" id="btn-lang-en" class="px-1.5 py-0.5 rounded text-xs text-slate-400">🇬🇧</button>
+        
+        <!-- Кнопка выбора языка (Глобус) -->
+        <div class="relative">
+            <button onclick="toggleLangMenu()" class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-200 active:scale-95 transition">
+                <span>🌐</span> <span id="current-lang-label">NO</span> ▾
+            </button>
+            <div id="lang-dropdown" class="hidden absolute right-0 mt-1 w-32 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden text-xs">
+                <button onclick="changeLang('no')" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2">🇳🇴 Norsk</button>
+                <button onclick="changeLang('en')" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2">🇬🇧 English</button>
+                <button onclick="changeLang('ru')" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2">🇷🇺 Русский</button>
+                <button onclick="changeLang('ua')" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2">🇺🇦 Українська</button>
+                <button onclick="changeLang('pl')" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2">🇵🇱 Polski</button>
+            </div>
         </div>
     </header>
 
-    <!-- ВКЛАДКА 1: ЖИВАЯ ЛЕНТА (RADAR FEED) -->
-    <main id="tab-feed" class="space-y-3">
-        <div class="flex justify-between items-center px-1">
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Live Kupp-Radar</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <!-- ВКЛАДКА 1: РАДАР (LIVE MONITORING) -->
+    <main id="tab-radar" class="space-y-3">
+        <!-- Виджет активного профиля и паузы -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg flex justify-between items-center">
+            <div class="relative">
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider" id="lbl-active-prof">Aktiv Profil:</div>
+                <button onclick="toggleProfileDropdown()" class="text-sm font-black text-blue-400 flex items-center gap-1 active:scale-95 transition">
+                    <span id="radar-profile-name">🧰 Verktøy Sarpsborg</span> ▾
+                </button>
+                <!-- Выпадающий список смены профиля -->
+                <div id="radar-profile-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl z-40 overflow-hidden text-xs"></div>
             </div>
-            <button onclick="loadFeed()" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
-                🔄 Oppdater
+
+            <!-- Тумблер вкл/пауза -->
+            <button onclick="toggleRadarPower()" id="radar-power-btn" class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <span id="lbl-radar-status">Aktiv</span>
             </button>
         </div>
-        <div id="feed-container" class="space-y-3"></div>
+
+        <!-- Бегущая строка (ДНК параметров профиля) -->
+        <div class="bg-slate-900/80 border border-blue-500/20 rounded-xl py-1.5 px-2 flex items-center gap-2 shadow-inner">
+            <span class="text-[9px] font-black uppercase text-blue-400 shrink-0 bg-blue-950/90 px-1.5 py-0.5 rounded border border-blue-800/60">
+                DNA
+            </span>
+            <div class="ticker-wrap w-full">
+                <div id="radar-ticker-text" class="ticker-move text-xs text-slate-300 font-medium space-x-6">
+                    <!-- Заполняется динамически параметрами профиля -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Лента карточек -->
+        <div class="flex justify-between items-center px-1 pt-1">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider" id="lbl-feed-title">Siste Funn i ditt område</h2>
+            <button onclick="fetchFeed()" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                🔄 <span id="lbl-refresh">Oppdater</span>
+            </button>
+        </div>
+        <div id="feed-cards" class="space-y-3"></div>
     </main>
 
-    <!-- ВКЛАДКА 2: СНАЙПЕР (НАСТРОЙКИ, ПРОФИЛИ, ТЕГИ) -->
-    <main id="tab-config" class="space-y-3 hidden">
-        <!-- Профили -->
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xs font-bold text-slate-300 uppercase">📁 Mine Jaktprofiler</h2>
-                <button onclick="openNewProfileModal()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded-lg">
-                    ➕ Ny Profil
+    <!-- ВКЛАДКА 2: ПРОФИЛИ (СПИСОК И ГЛУБОКИЙ РЕДАКТОР) -->
+    <main id="tab-profiles" class="space-y-3 hidden">
+        
+        <!-- Уровень 1: Список профилей -->
+        <div id="profiles-list-view" class="space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider" id="lbl-profiles-list">Mine Jaktprofiler</h2>
+                <button onclick="startCreateProfile()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-xl active:scale-95 transition">
+                    ➕ <span id="lbl-btn-newprof">Ny Profil</span>
                 </button>
             </div>
-            <div id="profiles-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
-        </section>
+            <div id="profiles-cards-container" class="space-y-2.5"></div>
+        </div>
 
-        <!-- Теги -->
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xs font-bold text-slate-300 uppercase">🎯 Søkeord (Tags)</h2>
-                <span id="tags-count" class="text-[10px] text-blue-400 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800/60">0 aktive</span>
-            </div>
-            <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
-            <div class="flex gap-1.5">
-                <input type="text" id="tag-input" placeholder="+ Legg til (f.eks. Kemppi, Makita, PS5)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
-                <button onclick="addTag()" class="px-3.5 py-2 bg-blue-600 font-bold text-xs rounded-xl text-white shrink-0">Legg til</button>
-            </div>
-        </section>
-
-        <!-- Цены -->
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xs font-bold text-slate-300 uppercase">💰 Prisintervall (NOK)</h2>
-                <button onclick="toggleFreeOnly()" id="btn-free-toggle" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-lg font-bold">
-                    🎁 Kun 0 kr (Gis bort)
+        <!-- Уровень 2: Внутри профиля (Редактор) -->
+        <div id="profile-editor-view" class="space-y-3.5 hidden">
+            <!-- Шапка редактора со стрелкой назад -->
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+                <button onclick="backToProfilesList()" class="flex items-center gap-1 text-xs font-bold text-blue-400 active:scale-95">
+                    ← <span id="lbl-back">Tilbake</span>
+                </button>
+                <div class="text-xs font-bold text-white" id="editor-header-title">Rediger Profil</div>
+                <button onclick="saveCurrentEditorProfile()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-xl active:scale-95">
+                    Lagre 💾
                 </button>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="price-min" placeholder="Fra kr" oninput="saveAndSync()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
-                <input type="number" id="price-max" placeholder="Til kr (f.eks. 3500)" oninput="saveAndSync()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
-            </div>
-        </section>
 
-        <!-- Города -->
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xs font-bold text-slate-300 uppercase">📍 Områder & Byer</h2>
-                <span id="cities-count" class="text-[10px] text-blue-400 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800/60">0 valgt</span>
+            <!-- Имя профиля -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-1">
+                <label class="text-[10px] text-slate-400 uppercase font-bold" id="lbl-prof-name">Profilnavn:</label>
+                <input type="text" id="ed-prof-name" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
             </div>
-            <div id="cities-container" class="flex flex-wrap gap-1.5 mb-2.5"></div>
-            <div class="flex gap-1.5">
-                <input type="text" id="city-input" placeholder="+ Legg til by/kommune..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
-                <button onclick="addCustomCity()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 text-white font-bold text-xs rounded-xl shrink-0">+ By</button>
+
+            <!-- Теги поиска (Снайпер-цели) -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-slate-300 uppercase font-bold">🎯 Søkeord (Tags)</label>
+                    <span id="ed-tags-count" class="text-[10px] text-blue-400 font-bold">0 aktive</span>
+                </div>
+                <div id="ed-tags-box" class="flex flex-wrap gap-1.5"></div>
+                <div class="flex gap-1.5">
+                    <input type="text" id="ed-new-tag-input" placeholder="+ Legg til (f.eks. Kemppi, Makita)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+                    <button onclick="addEditorTag()" class="px-3.5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shrink-0">+ Tag</button>
+                </div>
             </div>
-        </section>
+
+            <!-- Минус-слова (Исключения) -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-red-300 uppercase font-bold">⛔ Minus-ord (Ekskluder)</label>
+                    <span class="text-[9px] text-slate-400">Filtrerer bort søppel</span>
+                </div>
+                <div id="ed-neg-box" class="flex flex-wrap gap-1.5"></div>
+                <div class="flex gap-1.5">
+                    <input type="text" id="ed-new-neg-input" placeholder="+ F.eks. defekt, ødelagt, ønskes..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-red-500">
+                    <button onclick="addEditorNegTag()" class="px-3.5 py-2 bg-red-600 text-white text-xs font-bold rounded-xl shrink-0">+ Neg</button>
+                </div>
+            </div>
+
+            <!-- Выбор локации и Радиус -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-slate-300 uppercase font-bold">📍 Lokasjon & Radius</label>
+                    <span id="ed-radius-val" class="text-[10px] text-blue-400 font-bold">30 km</span>
+                </div>
+
+                <!-- Быстрые чипы городов -->
+                <div id="ed-cities-box" class="flex flex-wrap gap-1.5"></div>
+
+                <div class="flex gap-1.5 pt-1">
+                    <input type="text" id="ed-custom-city" placeholder="+ Egendefinert by/kommune..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-500">
+                    <button onclick="addCustomCityToEditor()" class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-white text-xs font-bold rounded-xl shrink-0">+ By</button>
+                </div>
+
+                <!-- Ползунок радиуса -->
+                <div class="pt-2">
+                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                        <span>5 km</span><span>15 km</span><span>30 km</span><span>50 km</span><span>100 km</span><span>Norge</span>
+                    </div>
+                    <input type="range" id="ed-radius-slider" min="1" max="6" value="3" oninput="updateRadiusLabel(this.value)" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                </div>
+
+                <!-- Тумблер Fiks ferdig -->
+                <label class="flex items-center gap-2 pt-2 cursor-pointer">
+                    <input type="checkbox" id="ed-fiks-ferdig" class="w-4 h-4 rounded text-blue-600 bg-slate-800 border-slate-700">
+                    <span class="text-xs text-slate-300">📦 Inkluder Fiks ferdig (sending fra hele Norge)</span>
+                </label>
+            </div>
+
+            <!-- Ценовой коридор -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-slate-300 uppercase font-bold">💰 Prisintervall (kr)</label>
+                    <button onclick="setFreeToggleInEditor()" id="ed-btn-free" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">
+                        🎁 Kun 0 kr (Gis bort)
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="ed-price-min" placeholder="Fra kr" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2">
+                    <input type="number" id="ed-price-max" placeholder="Til kr" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2">
+                </div>
+            </div>
+
+            <!-- Индивидуальный шаблон ответа продавцу -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-1.5">
+                <label class="text-[10px] text-slate-300 uppercase font-bold">💬 Tilpasset melding til selger:</label>
+                <textarea id="ed-custom-template" rows="2" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:outline-none focus:border-blue-500"></textarea>
+            </div>
+        </div>
     </main>
 
-    <!-- ВКЛАДКА 3: VIP & ТАРИФЫ -->
-    <main id="tab-vip" class="space-y-4 hidden">
+    <!-- ВКЛАДКА 3: VIP SNIPER -->
+    <main id="tab-vip" class="space-y-3.5 hidden">
         <div class="bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-slate-900 border border-amber-500/30 rounded-2xl p-4 text-center">
-            <span class="text-3xl mb-2 block">⭐</span>
-            <h2 class="text-base font-bold text-amber-300 mb-1">VIP Sniper Status</h2>
-            <p class="text-xs text-slate-300 mb-4">Motta lynraske varsler 5–15 sekunder før alle andre.</p>
-            <div class="text-left text-xs space-y-2 mb-4 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-                <div class="flex items-center gap-2"><span>✅</span> <span>Ubegrenset antall søkeord (opptil 15)</span></div>
-                <div class="flex items-center gap-2"><span>✅</span> <span>Samtidig overvåking av 5+ byer</span></div>
-                <div class="flex items-center gap-2"><span>✅</span> <span>Maksimal prioritet i Telegram-kanalen</span></div>
+            <span class="text-3xl mb-1 block">⭐</span>
+            <h2 class="text-base font-black text-amber-300 mb-0.5">VIP SNIPER PASS</h2>
+            <p class="text-xs text-slate-300 mb-3" id="lbl-vip-sub">Få et urettferdig forsprang på Finn.no</p>
+            
+            <div class="text-left text-xs space-y-2.5 mb-4 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                <div class="flex items-center gap-2"><span>⚡</span> <span><b>5–15 sekunder</b> varsling direkte i Telegram</span></div>
+                <div class="flex items-center gap-2"><span>🎯</span> <span>Opptil <b>5 profiler</b> og <b>15 søkeord</b> i hver</span></div>
+                <div class="flex items-center gap-2"><span>✨</span> <span>Gemini AI <b>arbitrasje- og markedsanalyse</b></span></div>
+                <div class="flex items-center gap-2"><span>🚀</span> <span>Prioritert tråd i sanntid</span></div>
             </div>
-            <button onclick="buyVip()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
+
+            <button onclick="buyVipStars()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
                 ⭐ Oppgrader for 250 Telegram Stars
             </button>
         </div>
     </main>
 
-    <!-- НИЖНЯЯ НАВИГАЦИЯ (TABS) -->
+    <!-- НИЖНЯЯ НАВИГАЦИЯ -->
     <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center py-2 z-40">
-        <button onclick="switchTab('feed')" id="nav-feed" class="tab-btn active flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
-            <span class="text-base">📡</span> <span>Radar</span>
+        <button onclick="switchTab('radar')" id="nav-radar" class="flex flex-col items-center gap-0.5 text-[10px] font-bold text-slate-400 pt-1 tab-active">
+            <span class="text-base">📡</span> <span id="lbl-nav-radar">Radar</span>
         </button>
-        <button onclick="switchTab('config')" id="nav-config" class="tab-btn flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
-            <span class="text-base">🎯</span> <span>Søkeord</span>
+        <button onclick="switchTab('profiles')" id="nav-profiles" class="flex flex-col items-center gap-0.5 text-[10px] font-bold text-slate-400 pt-1">
+            <span class="text-base">🎯</span> <span id="lbl-nav-prof">Profiler</span>
         </button>
-        <button onclick="switchTab('vip')" id="nav-vip" class="tab-btn flex flex-col items-center gap-1 text-[10px] font-bold text-slate-400 pt-1">
+        <button onclick="switchTab('vip')" id="nav-vip" class="flex flex-col items-center gap-0.5 text-[10px] font-bold text-slate-400 pt-1">
             <span class="text-base">⭐</span> <span>VIP</span>
         </button>
     </nav>
 
-    <!-- МОДАЛКА НОВОГО ПРОФИЛЯ -->
-    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm">
-            <h3 class="text-sm font-bold text-white mb-2">💾 Ny Jaktprofil</h3>
-            <input type="text" id="modal-name" placeholder="Profilnavn (f.eks. Garasje Sarpsborg)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 mb-3">
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="closeProfileModal()" class="py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Avbryt</button>
-                <button onclick="saveProfile()" class="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Lagre</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="toast" class="toast fixed bottom-16 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl z-50">
+    <!-- Toast Уведомление -->
+    <div id="toast" class="toast fixed bottom-16 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl z-50">
         Lagret! ✅
     </div>
 
@@ -166,197 +250,358 @@
         const API_BASE = "https://finn-sniper-bot.onrender.com";
         const userId = tg?.initDataUnsafe?.user?.id || 'demo_user';
 
-        let appState = {
-            activeProfile: 'prof_1',
-            tags: ['Kemppi Sveiseapparat', 'PlayStation 5'],
-            priceMin: '',
-            priceMax: '',
-            isFreeOnly: false,
-            cities: ['Sarpsborg', 'Fredrikstad'],
-            allCities: ['Sarpsborg', 'Fredrikstad', 'Moss', 'Halden', 'Hvaler', 'Råde', 'Oslo', 'Drammen', 'Bergen'],
-            profiles: [
-                { id: 'prof_1', name: '🧰 Verktøy Østfold', tags: ['Kemppi', 'Makita 18V'], priceMin: '', priceMax: '3000', cities: ['Sarpsborg', 'Fredrikstad'] },
-                { id: 'prof_2', name: '💻 Tech Resale', tags: ['PlayStation 5', 'iPhone 15'], priceMin: '1000', priceMax: '6000', cities: ['Oslo', 'Sarpsborg'] }
-            ]
-        };
+        let currentLang = 'no';
+        let isRadarActive = true;
+        let activeProfileId = 'prof_1';
+        let editingProfile = null;
 
-        async function init() {
+        const RADIUS_MAP = { "1": "5 km", "2": "15 km", "3": "30 km", "4": "50 km", "5": "100 km", "6": "Hele Norge" };
+        const POPULAR_CITIES = ['Sarpsborg', 'Fredrikstad', 'Moss', 'Halden', 'Oslo', 'Drammen', 'Bergen', 'Stavanger', 'Trondheim', 'Kristiansand', 'Tromsø'];
+
+        // Базовая структура профилей
+        let profiles = [
+            {
+                id: 'prof_1',
+                name: '🧰 Verktøy Sarpsborg',
+                tags: ['Kemppi', 'Makita 18V', 'Milwaukee'],
+                negTags: ['defekt', 'deler', 'ønskes kjøpt'],
+                cities: ['Sarpsborg', 'Fredrikstad'],
+                radiusVal: '3',
+                fiksFerdig: true,
+                priceMin: '',
+                priceMax: '3500',
+                template: 'Hei! Jeg er veldig interessert i verktøyet og kan hente i dag i Sarpsborg/Fr.stad. Passer det? Mvh'
+            },
+            {
+                id: 'prof_2',
+                name: '💻 Tech & Gaming',
+                tags: ['PlayStation 5 Pro', 'iPhone 15', 'RTX 4080'],
+                negTags: ['iCloud låst', 'knust'],
+                cities: ['Oslo', 'Sarpsborg', 'Moss'],
+                radiusVal: '4',
+                fiksFerdig: true,
+                priceMin: '1000',
+                priceMax: '6500',
+                template: 'Hei! Er denne fortsatt tilgjengelig? Kan hente raskt eller betale med Fiks ferdig. Mvh'
+            },
+            {
+                id: 'prof_3',
+                name: '🎁 Gis bort (0 kr)',
+                tags: ['Weber Grill', 'Skinnsofa', 'Gressklipper'],
+                negTags: ['gis bort mot betaling'],
+                cities: ['Sarpsborg', 'Fredrikstad', 'Halden'],
+                radiusVal: '2',
+                fiksFerdig: false,
+                priceMin: '0',
+                priceMax: '0',
+                template: 'Hei! Jeg kan hente denne i kveld med henger/varebil. Mvh'
+            }
+        ];
+
+        async function initApp() {
             try {
                 const res = await fetch(`${API_BASE}/api/user_state?user_id=${userId}`);
                 const data = await res.json();
-                if (data.settings && Object.keys(data.settings).length > 0) {
-                    Object.assign(appState, data.settings);
+                if (data.settings && data.settings.profiles) {
+                    profiles = data.settings.profiles;
+                    activeProfileId = data.settings.activeProfileId || profiles[0].id;
+                    isRadarActive = data.settings.isRadarActive !== undefined ? data.settings.isRadarActive : true;
                 }
-            } catch(e){}
-            renderAll();
-            loadFeed();
+                if (data.is_vip) {
+                    document.getElementById('vip-status-tag').innerText = 'VIP ⭐';
+                    document.getElementById('vip-status-tag').className = 'text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold uppercase';
+                }
+            } catch(e) {
+                const local = localStorage.getItem('fs_profiles');
+                if (local) profiles = JSON.parse(local);
+            }
+            renderRadarTab();
+            renderProfilesList();
+            fetchFeed();
         }
 
-        async function saveAndSync() {
-            appState.priceMin = document.getElementById('price-min').value;
-            appState.priceMax = document.getElementById('price-max').value;
+        async function syncStateWithBackend() {
+            localStorage.setItem('fs_profiles', JSON.stringify(profiles));
             try {
                 await fetch(`${API_BASE}/api/save_state`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, settings: appState })
+                    body: JSON.stringify({
+                        user_id: userId,
+                        settings: { profiles, activeProfileId, isRadarActive }
+                    })
                 });
             } catch(e){}
         }
 
+        // --- НАВИГАЦИЯ ПО ВКЛАДКАМ ---
         function switchTab(tab) {
-            ['feed', 'config', 'vip'].forEach(t => {
+            ['radar', 'profiles', 'vip'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
-                document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+                document.getElementById(`nav-${t}`).classList.toggle('tab-active', t === tab);
             });
+            if (tab === 'radar') renderRadarTab();
+            if (tab === 'profiles') backToProfilesList();
             if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         }
 
-        function renderAll() {
-            renderProfiles();
-            renderTags();
-            renderCities();
-            document.getElementById('price-min').value = appState.priceMin || '';
-            document.getElementById('price-max').value = appState.priceMax || '';
-        }
+        // --- ВКЛАДКА РАДАР ---
+        function renderRadarTab() {
+            const activeProf = profiles.find(p => p.id === activeProfileId) || profiles[0];
+            document.getElementById('radar-profile-name').innerText = activeProf.name;
+            
+            // ДНК Бегущей строки
+            const radiusStr = RADIUS_MAP[activeProf.radiusVal || '3'];
+            const citiesStr = activeProf.cities.join(', ');
+            const tagsStr = activeProf.tags.join(', ');
+            const priceStr = activeProf.priceMin === '0' && activeProf.priceMax === '0' ? '🎁 Kun 0 kr' : `💰 ${activeProf.priceMin || '0'} - ${activeProf.priceMax || 'Maks'} kr`;
+            
+            document.getElementById('radar-ticker-text').innerHTML = `
+                <span>📍 ${citiesStr} (${radiusStr})</span>
+                <span>🎯 ${tagsStr}</span>
+                <span>${priceStr}</span>
+                <span>${activeProf.fiksFerdig ? '📦 Fiks ferdig: JA' : '🚗 Kun henting'}</span>
+            `;
 
-        function renderProfiles() {
-            const container = document.getElementById('profiles-list');
-            container.innerHTML = '';
-            appState.profiles.forEach(p => {
-                const isActive = p.id === appState.activeProfile;
-                const div = document.createElement('div');
-                div.className = `shrink-0 p-2 rounded-xl text-xs flex items-center gap-1.5 border transition ${isActive ? 'bg-blue-600/30 border-blue-500 text-white font-bold' : 'bg-slate-800 border-slate-700 text-slate-300'}`;
-                div.innerHTML = `
-                    <span onclick="selectProfile('${p.id}')" class="cursor-pointer">${p.name}</span>
-                    <button onclick="deleteProfile('${p.id}')" class="text-slate-400 hover:text-red-400 ml-1">×</button>
-                `;
-                container.appendChild(div);
+            // Выпадающий список выбора профилей на радаре
+            const dd = document.getElementById('radar-profile-dropdown');
+            dd.innerHTML = '';
+            profiles.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-3 py-2 hover:bg-slate-900 border-b border-slate-800 last:border-0 ${p.id === activeProfileId ? 'font-bold text-blue-400' : 'text-slate-300'}`;
+                btn.innerText = p.name;
+                btn.onclick = () => {
+                    activeProfileId = p.id;
+                    dd.classList.add('hidden');
+                    syncStateWithBackend();
+                    renderRadarTab();
+                    showToast(`Aktivert: ${p.name} 🎯`);
+                };
+                dd.appendChild(btn);
             });
         }
 
-        function selectProfile(id) {
-            const p = appState.profiles.find(x => x.id === id);
-            if (!p) return;
-            appState.activeProfile = id;
-            appState.tags = [...p.tags];
-            appState.priceMin = p.priceMin;
-            appState.priceMax = p.priceMax;
-            appState.cities = [...p.cities];
-            saveAndSync();
-            renderAll();
-            showToast('Profil valgt! 🎯');
+        function toggleProfileDropdown() {
+            document.getElementById('radar-profile-dropdown').classList.toggle('hidden');
+        }
+
+        function toggleRadarPower() {
+            isRadarActive = !isRadarActive;
+            const btn = document.getElementById('radar-power-btn');
+            const lbl = document.getElementById('lbl-radar-status');
+            if (isRadarActive) {
+                btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                lbl.innerText = 'Aktiv';
+            } else {
+                btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                lbl.innerText = 'Pause';
+            }
+            syncStateWithBackend();
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        // --- ВКЛАДКА ПРОФИЛЕЙ (СПИСОК И РЕДАКТОР) ---
+        function renderProfilesList() {
+            const container = document.getElementById('profiles-cards-container');
+            container.innerHTML = '';
+            profiles.forEach(p => {
+                const isActive = p.id === activeProfileId;
+                const card = document.createElement('div');
+                card.className = `bg-slate-900/90 border rounded-2xl p-3.5 shadow-lg transition ${isActive ? 'border-blue-500' : 'border-slate-800'}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="text-sm font-bold text-white">${p.name}</div>
+                            <div class="text-[10px] text-slate-400">📍 ${p.cities.join(', ')} • ${RADIUS_MAP[p.radiusVal || '3']}</div>
+                        </div>
+                        ${isActive ? '<span class="text-[9px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-md">AKTIV</span>' : `<button onclick="activateProfile('${p.id}')" class="text-[10px] bg-slate-800 text-slate-300 hover:text-white px-2 py-0.5 rounded-md border border-slate-700">Aktiver</button>`}
+                    </div>
+                    <div class="flex flex-wrap gap-1 mb-2.5">
+                        ${p.tags.map(t => `<span class="bg-blue-950 text-blue-300 text-[10px] px-2 py-0.5 rounded border border-blue-900">${t}</span>`).join('')}
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-800/80">
+                        <span class="text-[10px] text-slate-400">💰 ${p.priceMin || '0'} - ${p.priceMax || 'Maks'} kr</span>
+                        <div class="flex gap-2">
+                            <button onclick="editProfileDeep('${p.id}')" class="text-xs text-blue-400 font-bold">Rediger ✏️</button>
+                            <button onclick="deleteProfile('${p.id}')" class="text-xs text-red-400 font-bold">Slett 🗑️</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function activateProfile(id) {
+            activeProfileId = id;
+            syncStateWithBackend();
+            renderProfilesList();
+            showToast('Profil aktivert! 🎯');
         }
 
         function deleteProfile(id) {
-            if (appState.profiles.length <= 1) return;
-            appState.profiles = appState.profiles.filter(p => p.id !== id);
-            if (appState.activeProfile === id) appState.activeProfile = appState.profiles[0].id;
-            saveAndSync();
-            renderProfiles();
+            if (profiles.length <= 1) { alert('Du må ha minst én profil!'); return; }
+            profiles = profiles.filter(p => p.id !== id);
+            if (activeProfileId === id) activeProfileId = profiles[0].id;
+            syncStateWithBackend();
+            renderProfilesList();
+            showToast('Profil slettet! 🗑️');
         }
 
-        function openNewProfileModal() { document.getElementById('profile-modal').classList.remove('hidden'); }
-        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
-        function saveProfile() {
-            const name = document.getElementById('modal-name').value.trim() || 'Min Profil';
-            const newId = 'prof_' + Date.now();
-            appState.profiles.push({
-                id: newId,
-                name: name,
-                tags: [...appState.tags],
-                priceMin: document.getElementById('price-min').value,
-                priceMax: document.getElementById('price-max').value,
-                cities: [...appState.cities]
+        function startCreateProfile() {
+            editingProfile = {
+                id: 'prof_' + Date.now(),
+                name: 'Ny Jaktprofil',
+                tags: ['Makita', 'Sveiseapparat'],
+                negTags: ['defekt'],
+                cities: ['Sarpsborg', 'Fredrikstad'],
+                radiusVal: '3',
+                fiksFerdig: true,
+                priceMin: '',
+                priceMax: '',
+                template: 'Hei! Jeg er interessert og kan hente i dag. Mvh'
+            };
+            openEditorView();
+        }
+
+        function editProfileDeep(id) {
+            const p = profiles.find(x => x.id === id);
+            if (!p) return;
+            editingProfile = JSON.parse(JSON.stringify(p));
+            openEditorView();
+        }
+
+        function openEditorView() {
+            document.getElementById('profiles-list-view').classList.add('hidden');
+            document.getElementById('profile-editor-view').classList.remove('hidden');
+
+            document.getElementById('ed-prof-name').value = editingProfile.name;
+            document.getElementById('ed-custom-template').value = editingProfile.template || '';
+            document.getElementById('ed-price-min').value = editingProfile.priceMin || '';
+            document.getElementById('ed-price-max').value = editingProfile.priceMax || '';
+            document.getElementById('ed-fiksFerdig').checked = editingProfile.fiksFerdig || false;
+            document.getElementById('ed-radius-slider').value = editingProfile.radiusVal || '3';
+            updateRadiusLabel(editingProfile.radiusVal || '3');
+
+            renderEditorTags();
+            renderEditorNegTags();
+            renderEditorCities();
+        }
+
+        function backToProfilesList() {
+            document.getElementById('profile-editor-view').classList.add('hidden');
+            document.getElementById('profiles-list-view').classList.remove('hidden');
+            renderProfilesList();
+        }
+
+        function saveCurrentEditorProfile() {
+            editingProfile.name = document.getElementById('ed-prof-name').value.trim() || 'Min Profil';
+            editingProfile.template = document.getElementById('ed-custom-template').value;
+            editingProfile.priceMin = document.getElementById('ed-price-min').value;
+            editingProfile.priceMax = document.getElementById('ed-price-max').value;
+            editingProfile.fiksFerdig = document.getElementById('ed-fiks-ferdig').checked;
+            editingProfile.radiusVal = document.getElementById('ed-radius-slider').value;
+
+            const idx = profiles.findIndex(p => p.id === editingProfile.id);
+            if (idx >= 0) profiles[idx] = editingProfile;
+            else profiles.push(editingProfile);
+
+            activeProfileId = editingProfile.id;
+            syncStateWithBackend();
+            backToProfilesList();
+            showToast('Profil lagret! 💾');
+        }
+
+        function updateRadiusLabel(val) {
+            document.getElementById('ed-radius-val').innerText = RADIUS_MAP[val] || '30 km';
+        }
+
+        function renderEditorTags() {
+            const box = document.getElementById('ed-tags-box');
+            box.innerHTML = '';
+            editingProfile.tags.forEach((t, i) => {
+                const s = document.createElement('span');
+                s.className = "bg-blue-950 border border-blue-800 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
+                s.innerHTML = `${t} <button onclick="removeEditorTag(${i})" class="text-slate-400 hover:text-red-400 font-bold">×</button>`;
+                box.appendChild(s);
             });
-            appState.activeProfile = newId;
-            closeProfileModal();
-            saveAndSync();
-            renderProfiles();
-            showToast('Ny profil lagret! 💾');
+            document.getElementById('ed-tags-count').innerText = `${editingProfile.tags.length} aktive`;
         }
 
-        function renderTags() {
-            const container = document.getElementById('tags-container');
-            container.innerHTML = '';
-            appState.tags.forEach((t, i) => {
-                const span = document.createElement('span');
-                span.className = "bg-blue-950 border border-blue-800 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
-                span.innerHTML = `<span>${t}</span><button onclick="removeTag(${i})" class="text-slate-400 hover:text-red-400">×</button>`;
-                container.appendChild(span);
-            });
-            document.getElementById('tags-count').innerText = `${appState.tags.length} aktive`;
-        }
-
-        function addTag() {
-            const inp = document.getElementById('tag-input');
-            const val = inp.value.trim();
-            if (!val) return;
-            appState.tags.push(val);
+        function addEditorTag() {
+            const inp = document.getElementById('ed-new-tag-input');
+            const v = inp.value.trim();
+            if (!v) return;
+            editingProfile.tags.push(v);
             inp.value = '';
-            saveAndSync();
-            renderTags();
-            showToast('Søkeord lagt til! 🎯');
+            renderEditorTags();
         }
 
-        function removeTag(i) {
-            appState.tags.splice(i, 1);
-            saveAndSync();
-            renderTags();
-        }
+        function removeEditorTag(i) { editingProfile.tags.splice(i, 1); renderEditorTags(); }
 
-        function toggleFreeOnly() {
-            appState.isFreeOnly = !appState.isFreeOnly;
-            if (appState.isFreeOnly) {
-                document.getElementById('price-min').value = '0';
-                document.getElementById('price-max').value = '0';
-            } else {
-                document.getElementById('price-min').value = '';
-                document.getElementById('price-max').value = '';
-            }
-            saveAndSync();
-        }
-
-        function renderCities() {
-            const container = document.getElementById('cities-container');
-            container.innerHTML = '';
-            appState.allCities.forEach(city => {
-                const isChecked = appState.cities.includes(city);
-                const chip = document.createElement('button');
-                chip.className = `p-2 rounded-xl text-xs border transition ${isChecked ? 'chip-active' : 'bg-slate-900 border-slate-800 text-slate-300'}`;
-                chip.innerText = (city === 'Sarpsborg' || city === 'Fredrikstad') ? `🎯 ${city}` : city;
-                chip.onclick = () => toggleCity(city);
-                container.appendChild(chip);
+        function renderEditorNegTags() {
+            const box = document.getElementById('ed-neg-box');
+            box.innerHTML = '';
+            editingProfile.negTags.forEach((t, i) => {
+                const s = document.createElement('span');
+                s.className = "bg-red-950 border border-red-800 text-red-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5";
+                s.innerHTML = `${t} <button onclick="removeEditorNegTag(${i})" class="text-slate-400 hover:text-red-400 font-bold">×</button>`;
+                box.appendChild(s);
             });
-            document.getElementById('cities-count').innerText = `${appState.cities.length} valgt`;
         }
 
-        function toggleCity(city) {
-            if (appState.cities.includes(city)) {
-                appState.cities = appState.cities.filter(c => c !== city);
-            } else {
-                appState.cities.push(city);
-            }
-            saveAndSync();
-            renderCities();
-        }
-
-        function addCustomCity() {
-            const inp = document.getElementById('city-input');
-            const val = inp.value.trim();
-            if (!val) return;
-            if (!appState.allCities.includes(val)) {
-                appState.allCities.push(val);
-                appState.cities.push(val);
-            }
+        function addEditorNegTag() {
+            const inp = document.getElementById('ed-new-neg-input');
+            const v = inp.value.trim();
+            if (!v) return;
+            editingProfile.negTags.push(v);
             inp.value = '';
-            saveAndSync();
-            renderCities();
-            showToast(`Lagt til ${val}! 📍`);
+            renderEditorNegTags();
         }
 
-        async function loadFeed() {
-            const container = document.getElementById('feed-container');
+        function removeEditorNegTag(i) { editingProfile.negTags.splice(i, 1); renderEditorNegTags(); }
+
+        function renderEditorCities() {
+            const box = document.getElementById('ed-cities-box');
+            box.innerHTML = '';
+            const all = Array.from(new Set([...POPULAR_CITIES, ...editingProfile.cities]));
+            all.forEach(c => {
+                const isSel = editingProfile.cities.includes(c);
+                const btn = document.createElement('button');
+                btn.className = `p-1.5 px-2.5 rounded-xl text-xs border transition ${isSel ? 'chip-selected' : 'bg-slate-900 border-slate-800 text-slate-300'}`;
+                btn.innerText = (c === 'Sarpsborg' || c === 'Fredrikstad') ? `🎯 ${c}` : c;
+                btn.onclick = () => toggleCityInEditor(c);
+                box.appendChild(btn);
+            });
+        }
+
+        function toggleCityInEditor(c) {
+            if (editingProfile.cities.includes(c)) editingProfile.cities = editingProfile.cities.filter(x => x !== c);
+            else editingProfile.cities.push(c);
+            renderEditorCities();
+        }
+
+        function addCustomCityToEditor() {
+            const inp = document.getElementById('ed-custom-city');
+            const v = inp.value.trim();
+            if (!v) return;
+            if (!editingProfile.cities.includes(v)) editingProfile.cities.push(v);
+            inp.value = '';
+            renderEditorCities();
+        }
+
+        function setFreeToggleInEditor() {
+            const min = document.getElementById('ed-price-min');
+            const max = document.getElementById('ed-price-max');
+            if (min.value === '0' && max.value === '0') {
+                min.value = ''; max.value = '';
+            } else {
+                min.value = '0'; max.value = '0';
+            }
+        }
+
+        // --- ЖИВАЯ ЛЕНТА ---
+        async function fetchFeed() {
+            const container = document.getElementById('feed-cards');
             try {
                 const res = await fetch(`${API_BASE}/api/feed`);
                 const data = await res.json();
@@ -378,7 +623,7 @@
                                     <span class="font-bold text-blue-400">✨ Gemini AI:</span> ${item.ai_verdict}
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <button onclick="copyMsg('${item.title}')" class="py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700">💬 Melding</button>
+                                    <button onclick="copyActiveMessage('${item.title}')" class="py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700">💬 Melding</button>
                                     <button onclick="openLink('${item.link}')" class="py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md">Se på Finn ↗</button>
                                 </div>
                             </div>
@@ -391,9 +636,18 @@
             container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500">Radaren skanner Finn.no... Nye kupp vises her straks! 📡</div>`;
         }
 
-        function copyMsg(title) {
-            const txt = `Hei! Jeg er veldig interessert i "${title}" og kan hente raskt. Passer det i kveld? Mvh`;
-            navigator.clipboard.writeText(txt).then(() => showToast('Melding kopiert! Lim inn på Finn.no ✅'));
+        function copyActiveMessage(title) {
+            const activeProf = profiles.find(p => p.id === activeProfileId) || profiles[0];
+            const msg = activeProf.template || `Hei! Jeg er veldig interessert i "${title}" og kan hente i dag. Mvh`;
+            navigator.clipboard.writeText(msg).then(() => showToast('Melding kopiert! Lim inn på Finn.no ✅'));
+        }
+
+        function toggleLangMenu() { document.getElementById('lang-dropdown').classList.toggle('hidden'); }
+        function changeLang(l) {
+            currentLang = l;
+            document.getElementById('current-lang-label').innerText = l.toUpperCase();
+            document.getElementById('lang-dropdown').classList.add('hidden');
+            showToast(`Språk: ${l.toUpperCase()}`);
         }
 
         function showToast(msg) {
@@ -409,17 +663,11 @@
             else window.open(url, '_blank');
         }
 
-        function buyVip() {
+        function buyVipStars() {
             if (tg) tg.close();
         }
 
-        function setLang(l) {
-            ['no', 'ru', 'en'].forEach(lang => {
-                document.getElementById(`btn-lang-${lang}`).className = (lang === l) ? "px-1.5 py-0.5 rounded text-xs font-bold bg-blue-600 text-white" : "px-1.5 py-0.5 rounded text-xs text-slate-400";
-            });
-        }
-
-        init();
+        initApp();
     </script>
 </body>
 </html>
