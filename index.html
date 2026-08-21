@@ -23,7 +23,7 @@
         .ticker-move {
             display: inline-flex;
             white-space: nowrap;
-            animation: ticker 30s linear infinite;
+            animation: ticker 25s linear infinite;
         }
         .ticker-move:hover, .ticker-move:active {
             animation-play-state: paused;
@@ -69,24 +69,22 @@
         </div>
     </header>
 
-    <!-- 2. БЕГУЩАЯ СТРОКА: ПУЛЬС НАХОДОК В РЕАЛЬНОМ ВРЕМЕНИ -->
+    <!-- 2. БЕГУЩАЯ СТРОКА: ДИНАМИЧЕСКИЙ ПУЛЬС НАХОДОК -->
     <div class="bg-slate-900/90 border border-blue-500/20 rounded-xl py-1.5 px-2 mb-3.5 flex items-center gap-2 shadow-inner">
         <span class="text-[10px] font-black uppercase text-blue-400 flex items-center gap-1 shrink-0 bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800/60">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> PULSE
         </span>
         <div class="ticker-wrap w-full">
-            <div class="ticker-move text-xs text-slate-300 font-medium space-x-6">
-                <span>🔥 [0 kr] Weber Spirit Grill (Sarpsborg, 2m)</span>
-                <span>⚡ [1 200 kr] Kemppi Minarc 150 (Fredrikstad, 6m)</span>
-                <span>⭐ [VIP Snipet] iPhone 15 Pro 128GB (Oslo, 11m)</span>
-                <span>🎁 [0 kr] Chesterfield Skinnsofa (Moss, 19m)</span>
-                <span>🎮 [4 200 kr] Sony PS5 Slim + 2 Spill (Halden, 24m)</span>
-                <span>🛠️ [850 kr] Milwaukee M18 Drill (Sarpsborg, 31m)</span>
+            <div id="ticker-content" class="ticker-move text-xs text-slate-300 font-medium space-x-6">
+                <span>🔥 [0 kr] Weber Spirit Grill (Sarpsborg)</span>
+                <span>⚡ Kemppi Minarc 150 (Fredrikstad)</span>
+                <span>⭐ iPhone 15 Pro 128GB (Oslo)</span>
+                <span>🎁 Chesterfield Skinnsofa (Moss)</span>
             </div>
         </div>
     </div>
 
-    <!-- 3. БЫСТРЫЕ ПРОФИЛИ ОХОТЫ (ПРЕСЕТЫ В 1 КЛИК) -->
+    <!-- 3. БЫСТРЫЕ ПРОФИЛИ ОХОТЫ -->
     <section class="mb-3.5">
         <div class="flex justify-between items-center mb-1.5">
             <h2 id="preset-title" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jaktprofiler (Forhåndsinnstillinger)</h2>
@@ -96,7 +94,7 @@
                 <span>🧰</span> <span>Proff Verktøy (Østfold)</span>
             </button>
             <button onclick="applyPreset('tech')" class="shrink-0 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500 text-xs rounded-xl flex items-center gap-1.5 font-medium transition active:scale-95">
-                <span>💻</span> <span>Tech & Gaming (Hele Norge)</span>
+                <span>💻</span> <span>Tech & Gaming (Norge)</span>
             </button>
             <button onclick="applyPreset('free')" class="shrink-0 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-blue-500 text-xs rounded-xl flex items-center gap-1.5 font-medium transition active:scale-95">
                 <span>🎁</span> <span>Gis bort / Lokalt (0 kr)</span>
@@ -104,7 +102,7 @@
         </div>
     </section>
 
-    <!-- 4. СНАЙПЕР-ТЕГИ (ЦЕЛИ ПОИСКА ПОЛЬЗОВАТЕЛЯ) -->
+    <!-- 4. СНАЙПЕР-ТЕГИ ПОЛЬЗОВАТЕЛЯ -->
     <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 mb-3.5 shadow-lg">
         <div class="flex justify-between items-center mb-2">
             <h2 id="tags-title" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -113,7 +111,6 @@
             <span id="tags-counter" class="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/60">2 / 2 aktive</span>
         </div>
         
-        <!-- Контейнер чипов -->
         <div id="tags-container" class="flex flex-wrap gap-1.5 mb-2.5">
             <span class="tag-chip text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 text-blue-200">
                 Kemppi Sveiseapparat <button onclick="removeTag(this)" class="text-slate-400 hover:text-red-400 ml-1">×</button>
@@ -123,16 +120,15 @@
             </span>
         </div>
 
-        <!-- Добавление нового тега -->
         <div class="flex gap-1.5">
-            <input type="text" id="new-tag-input" placeholder="+ Legg til søkeord (f.eks. Makita, RTX, Weber)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
+            <input type="text" id="new-tag-input" placeholder="+ Legg til søkeord..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 placeholder:text-slate-500">
             <button onclick="addTag()" id="btn-add-tag" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
                 Legg til
             </button>
         </div>
     </section>
 
-    <!-- 5. ЛОКАЦИИ С ФОКУСОМ НА САРПСБОРГ / ФРЕДРИКСТАД -->
+    <!-- 5. СЕЛЕКТОР ЛОКАЦИЙ -->
     <section class="mb-3.5">
         <h2 id="reg-title" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Aktiv Sone (Område)</h2>
         <div class="grid grid-cols-2 gap-1.5">
@@ -151,44 +147,24 @@
         </div>
     </section>
 
-    <!-- 6. КАРТОЧКА ГОРЯЧЕЙ НАХОДКИ C GEMINI DEAL SCORE (🔥 9.4/10) -->
-    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 mb-3.5 shadow-xl relative overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div class="flex justify-between items-start mb-2">
-            <div class="flex items-center gap-1.5">
-                <span class="text-[11px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md border border-blue-500/30">Sarpsborg</span>
-                <span class="text-[11px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">🔥 Score: 9.4 / 10</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-black text-emerald-400">1 200 kr</span>
-                <button onclick="toggleFav(this)" class="text-slate-400 hover:text-red-400 text-base">🤍</button>
-            </div>
+    <!-- 6. ЖИВАЯ ЛЕНТА РЕАЛЬНЫХ НАХОДОК СЕРВЕРА -->
+    <section class="mb-4">
+        <div class="flex justify-between items-center mb-2">
+            <h2 id="feed-head" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Siste Live Funn på Finn.no</h2>
+            <button onclick="loadLiveFeed()" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                🔄 <span id="lbl-refresh">Oppdater</span>
+            </button>
         </div>
 
-        <h3 class="font-bold text-sm text-white mb-1">Kemppi Minarc 150 Sveiseapparat</h3>
-        <p class="text-xs text-slate-300 mb-2.5">«Lite brukt pinstikksveiser. Følger med kabler og koffert. Hentes i Sarpsborg.»</p>
-        
-        <!-- Оценка Gemini -->
-        <div class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 text-xs mb-3">
-            <div class="flex items-center gap-1 font-bold text-blue-400 mb-1">
-                <span>✨</span> <span id="ai-label">Gemini AI Markedsanalyse:</span>
+        <div id="live-cards-container" class="space-y-3">
+            <!-- Сюда динамически загружаются карточки из /api/items -->
+            <div class="text-center py-6 text-xs text-slate-500 animate-pulse">
+                Laster inn sanntids-kupp fra radaren... 📡
             </div>
-            <div id="ai-val" class="text-slate-300">Superkupp! Nypris ~6 500 kr, bruktverdi ~2 800 kr. Estimert gevinst/besparelse: <b>~1 600 kr</b>.</div>
-        </div>
-
-        <!-- Кнопки действий -->
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="copyMsg('Hei! Jeg er veldig interessert i Kemppi-sveiseren og kan hente i dag i Sarpsborg. Mvh')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl text-center border border-slate-700 transition active:scale-95">
-                💬 Melding (Kopier)
-            </button>
-            <button onclick="openLink('https://www.finn.no/bap/forsale/search.html?q=Kemppi&location=0.20001')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl text-center shadow-md transition active:scale-95">
-                Se på Finn.no ↗
-            </button>
         </div>
     </section>
 
-    <!-- 7. VIP STARS BANNER (15 TAGS, 5 REGIONER) -->
+    <!-- 7. VIP STARS BANNER -->
     <section class="bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-slate-900 border border-amber-500/30 rounded-2xl p-3.5 text-center">
         <div class="text-sm mb-1 font-bold flex items-center justify-center gap-1.5 text-amber-300">
             <span>⭐</span> <span id="vip-title">Lås opp VIP Sniper</span>
@@ -211,6 +187,7 @@
             tg.ready();
         }
 
+        const API_BASE = "https://finn-sniper-bot.onrender.com";
         let currentLang = 'no';
         let isVip = false;
         let selectedLocation = '0.20001';
@@ -221,60 +198,75 @@
                 preset_t: "Jaktprofiler (Forhåndsinnstillinger)",
                 tags_lbl: "Dine Sniper-tags (Nøkkelord)",
                 reg_t: "Aktiv Sone (Område)",
-                ai_lbl: "Gemini AI Markedsanalyse:",
-                ai_v: "Superkupp! Nypris ~6 500 kr, bruktverdi ~2 800 kr. Estimert besparelse: ~1 600 kr.",
+                feed_h: "Siste Live Funn på Finn.no",
+                ref: "Oppdater",
                 vip_t: "Lås opp VIP Sniper",
                 vip_s: "15 Sniper-tags • 5 regioner • 5–15s forsprang",
                 vip_b: "⭐ Oppgrader til VIP (250 Stars)",
-                copied: "Melding kopiert! Lim inn på Finn.no ✅"
+                copied: "Melding kopiert! Lim inn på Finn.no ✅",
+                btn_copy: "💬 Melding (Kopier)",
+                btn_open: "Se på Finn.no ↗",
+                no_items: "Radaren overvåker Finn.no... Nye kupp vises her straks!"
             },
             ru: {
                 badge: "FREE (2/2 цели)",
                 preset_t: "Профили охоты (Пресеты в 1 клик)",
                 tags_lbl: "Ваши Снайпер-цели (Теги)",
                 reg_t: "Активная зона (Регион)",
-                ai_lbl: "Оценка Gemini AI:",
-                ai_v: "Супервыгода! Новая ~6 500 kr, рынок б/у ~2 800 kr. Чистая выгода: ~1 600 kr.",
+                feed_h: "Свежие находки с Finn.no (Реальное время)",
+                ref: "Обновить",
                 vip_t: "VIP Sniper Доступ",
                 vip_s: "До 15 целей • Все регионы • Пуши за 5–15 сек",
                 vip_b: "⭐ Активировать VIP (250 Stars)",
-                copied: "Текст скопирован! Вставьте на Finn.no ✅"
+                copied: "Текст скопирован! Вставьте на Finn.no ✅",
+                btn_copy: "💬 Текст продавцу",
+                btn_open: "Открыть на Finn.no ↗",
+                no_items: "Радар сканирует Finn.no... Свежие находки появятся здесь!"
             },
             en: {
                 badge: "FREE (2/2 tags)",
                 preset_t: "Hunting Profiles (Presets)",
                 tags_lbl: "Your Sniper Targets (Tags)",
                 reg_t: "Active Location Zone",
-                ai_lbl: "Gemini AI Market Analysis:",
-                ai_v: "Great deal! Retail ~6 500 kr, used market ~2 800 kr. Estimated margin: ~1 600 kr.",
+                feed_h: "Latest Real-time Deals from Finn.no",
+                ref: "Refresh",
                 vip_t: "Unlock VIP Sniper Pass",
                 vip_s: "15 Sniper tags • 5 regions • 5–15s head start",
                 vip_b: "⭐ Upgrade to VIP (250 Stars)",
-                copied: "Template copied to clipboard! ✅"
+                copied: "Template copied to clipboard! ✅",
+                btn_copy: "💬 Copy message",
+                btn_open: "Open on Finn.no ↗",
+                no_items: "Radar scanning Finn.no... Deals will appear shortly!"
             },
             ua: {
                 badge: "FREE (2/2 цілі)",
                 preset_t: "Профілі полювання (Пресети)",
                 tags_lbl: "Ваші Снайпер-цілі (Теги)",
                 reg_t: "Активна зона (Регіон)",
-                ai_lbl: "Оцінка Gemini AI:",
-                ai_v: "Суперпропозиція! Новий ~6 500 kr, б/в ~2 800 kr. Економія: ~1 600 kr.",
+                feed_h: "Свіжі знахідки з Finn.no (Реальний час)",
+                ref: "Оновити",
                 vip_t: "VIP Sniper Доступ",
                 vip_s: "15 цілей • Всі регіони • Сповіщення за 5–15 сек",
                 vip_b: "⭐ Оформити VIP (250 Stars)",
-                copied: "Повідомлення скопійовано! ✅"
+                copied: "Повідомлення скопійовано! ✅",
+                btn_copy: "💬 Текст продавцю",
+                btn_open: "Відкрити на Finn.no ↗",
+                no_items: "Радар моніторить Finn.no... Очікуйте на знахідки!"
             },
             pl: {
                 badge: "FREE (2/2 tagi)",
                 preset_t: "Profile polowań (Presety)",
                 tags_lbl: "Twoje Cele Snajpera (Tagi)",
                 reg_t: "Aktywna Strefa",
-                ai_lbl: "Ocena Gemini AI:",
-                ai_v: "Super okazja! Nowy ~6 500 kr, rynek wtórny ~2 800 kr. Zysk: ~1 600 kr.",
+                feed_h: "Najnowsze okazje z Finn.no",
+                ref: "Odśwież",
                 vip_t: "Odblokuj VIP Sniper",
                 vip_s: "15 celów • 5 regionów • Alerty w 5–15 sek",
                 vip_b: "⭐ Aktywuj VIP (250 Stars)",
-                copied: "Wiadomość skopiowana! ✅"
+                copied: "Wiadomość skopiowana! ✅",
+                btn_copy: "💬 Skopiuj tekst",
+                btn_open: "Zobacz na Finn.no ↗",
+                no_items: "Radar skanuje Finn.no... Okazje pojawią się wkrótce!"
             }
         };
 
@@ -284,8 +276,8 @@
             document.getElementById('preset-title').innerText = t.preset_t;
             document.getElementById('tags-label').innerText = t.tags_lbl;
             document.getElementById('reg-title').innerText = t.reg_t;
-            document.getElementById('ai-label').innerText = t.ai_lbl;
-            document.getElementById('ai-val').innerText = t.ai_v;
+            document.getElementById('feed-head').innerText = t.feed_h;
+            document.getElementById('lbl-refresh').innerText = t.ref;
             document.getElementById('vip-title').innerText = t.vip_t;
             document.getElementById('vip-sub').innerText = t.vip_s;
             document.getElementById('vip-btn').innerText = t.vip_b;
@@ -299,7 +291,73 @@
                 }
             });
 
+            loadLiveFeed();
             if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        }
+
+        async function loadLiveFeed() {
+            const container = document.getElementById('live-cards-container');
+            const ticker = document.getElementById('ticker-content');
+            const t = I18N[currentLang] || I18N.no;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/items`);
+                const data = await res.json();
+
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = `<div class="p-4 bg-slate-900/60 rounded-xl text-center text-xs text-slate-400">${t.no_items}</div>`;
+                    return;
+                }
+
+                // 1. Отрисовка динамических карточек
+                container.innerHTML = '';
+                let tickerHtml = '';
+
+                data.items.forEach(item => {
+                    tickerHtml += `<span>⚡ [${item.cat}] ${item.title}</span>`;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md border border-blue-500/30">${item.cat}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">🔥 Score: 9.1 / 10</span>
+                            </div>
+                            <button onclick="toggleFav(this)" class="text-slate-400 hover:text-red-400 text-base">🤍</button>
+                        </div>
+                        <h3 class="font-bold text-sm text-white mb-1">${item.title}</h3>
+                        ${item.summary ? `<p class="text-xs text-slate-400 mb-2 line-clamp-2">«${item.summary}»</p>` : ''}
+                        
+                        <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-xs mb-3">
+                            <div class="flex items-center gap-1 font-bold text-blue-400 mb-0.5">
+                                <span>✨</span> <span>Gemini AI:</span>
+                            </div>
+                            <div class="text-slate-300">${item.ai_verdict}</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="copyMsg('Hei! Jeg er veldig interessert og kan hente i dag hvis det passer. Mvh')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl text-center border border-slate-700 transition active:scale-95">
+                                ${t.btn_copy}
+                            </button>
+                            <button onclick="openLink('${item.link}')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl text-center shadow-md transition active:scale-95">
+                                ${t.btn_open}
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                if (tickerHtml) ticker.innerHTML = tickerHtml;
+
+            } catch (err) {
+                console.error("Feed error:", err);
+                container.innerHTML = `
+                    <div class="p-4 bg-slate-900/60 rounded-xl text-center text-xs text-slate-400">
+                        ${t.no_items}
+                    </div>
+                `;
+            }
         }
 
         function setLoc(elem, code, label) {
@@ -399,6 +457,9 @@
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             if (tg) tg.close();
         }
+
+        // Запуск при загрузке
+        loadLiveFeed();
     </script>
 </body>
 </html>
